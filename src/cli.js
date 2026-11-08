@@ -1,4 +1,6 @@
+import fs from 'node:fs';
 import os from 'node:os';
+import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 /**
@@ -9,6 +11,17 @@ import { fileURLToPath } from 'node:url';
  */
 const BIN = fileURLToPath(new URL('../bin/wave-mcp.js', import.meta.url));
 const HOME = os.homedir();
+const PACKAGE = JSON.parse(fs.readFileSync(new URL('../package.json', import.meta.url), 'utf8')).name;
+
+/**
+ * True when started by npx: the code then lives in npx's cache folder, which
+ * can be cleared, so commands for the user go through npx as well.
+ */
+export const VIA_NPX = /[\\/]_npx[\\/]/.test(BIN);
+export const PACKAGE_NAME = PACKAGE;
+const tilde = (p) => (HOME && p.startsWith(`${HOME}/`) ? `~/${p.slice(HOME.length + 1)}` : p);
+/** The package folder as shown to users, e.g. ~/src/wave-mcp. */
+export const PACKAGE_DIR = tilde(path.dirname(path.dirname(BIN)));
 
 function binPath() {
   const p = HOME && BIN.startsWith(`${HOME}/`) ? `~/${BIN.slice(HOME.length + 1)}` : BIN;
@@ -18,7 +31,8 @@ function binPath() {
 export const HOST = os.hostname();
 
 export function cli(args = '') {
-  return `node ${binPath()}${args ? ` ${args}` : ''}`;
+  const base = VIA_NPX ? `npx -y ${PACKAGE}` : `node ${binPath()}`;
+  return `${base}${args ? ` ${args}` : ''}`;
 }
 
 /** "In a terminal on <host> (not in this chat), run: <command>" */

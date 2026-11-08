@@ -1,6 +1,6 @@
 # Wave Accounting: tools, resources and prompts
 
-Generated from wave-mcp 1.0.0 by `npm run docs`; do not edit by hand.
+Generated from @saccolabs/wave-mcp 1.0.1 by `npm run docs`; do not edit by hand.
 
 72 tools in 13 toolsets (28 read, 44 write), 3 resources and 3 prompts.
 Limit the toolsets with `WAVE_MCP_TOOLSETS` (comma-separated).

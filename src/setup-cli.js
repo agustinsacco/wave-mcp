@@ -4,7 +4,7 @@ import path from 'node:path';
 import readline from 'node:readline/promises';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { HOST, cli } from './cli.js';
+import { HOST, PACKAGE_NAME, VIA_NPX, cli } from './cli.js';
 import { DESCRIPTION, nodeCommand } from '../extensions/wave.js';
 
 /**
@@ -66,7 +66,9 @@ export function detect({ env = process.env, home = os.homedir() } = {}) {
 
 function linkSkill(target) {
   fs.mkdirSync(path.dirname(target), { recursive: true });
-  fs.symlinkSync(SKILL_DIR, target, 'dir');
+  // npx's cache can be cleared, so copy the skill instead of linking into it.
+  if (VIA_NPX) fs.cpSync(SKILL_DIR, target, { recursive: true });
+  else fs.symlinkSync(SKILL_DIR, target, 'dir');
 }
 
 export async function runSetupCli({ yes = false, login = true, out = process.stdout, err = process.stderr, input = process.stdin, env = process.env, home = os.homedir(), runLogin, runCheck } = {}) {
@@ -80,6 +82,9 @@ export async function runSetupCli({ yes = false, login = true, out = process.std
   };
   const say = (s = '') => out.write(`${s}\n`);
   const node = nodeCommand();
+  // How clients start the server: npx when setup itself ran through npx.
+  const [command, args] = VIA_NPX ? ['npx', ['-y', PACKAGE_NAME]] : [node, [BIN]];
+  const piSource = VIA_NPX ? `npm:${PACKAGE_NAME}` : ROOT;
   let planned = 0;
 
   try {
@@ -93,10 +98,10 @@ export async function runSetupCli({ yes = false, login = true, out = process.std
     else if (d.pi.server && d.pi.skill) say(`  already set up (server: ${d.pi.server}; skill: ${d.pi.skill === 'package' ? 'package' : d.pi.skill}).`);
     else if (!d.pi.server) {
       planned++;
-      say(`  will run: pi install ${ROOT}`);
+      say(`  will run: pi install ${piSource}`);
       say('  (registers the wave MCP server and the wave-accounting skill for every pi session)');
       if (await ask('  Install?')) {
-        const r = run('pi', ['install', ROOT], { env });
+        const r = run('pi', ['install', piSource], { env });
         say(r.ok ? '  done.' : `  pi install failed: ${r.out.slice(0, 400)}`);
       } else say('  skipped.');
     } else {
@@ -115,11 +120,11 @@ export async function runSetupCli({ yes = false, login = true, out = process.std
       if (has && d.claude.skill) say('  already set up.');
       else {
         planned++;
-        if (!has) say(`  will run: claude mcp add --scope user wave -- ${node} ${BIN}`);
+        if (!has) say(`  will run: claude mcp add --scope user wave -- ${[command, ...args].join(' ')}`);
         if (!d.claude.skill) say(`  will link the skill: ${d.claude.skillPath} -> ${SKILL_DIR}`);
         if (await ask('  Set up Claude Code?')) {
           if (!has) {
-            const r = run('claude', ['mcp', 'add', '--scope', 'user', 'wave', '--', node, BIN], { env });
+            const r = run('claude', ['mcp', 'add', '--scope', 'user', 'wave', '--', command, ...args], { env });
             say(r.ok ? '  server added.' : `  claude mcp add failed: ${r.out.slice(0, 400)}`);
           }
           if (!d.claude.skill) (linkSkill(d.claude.skillPath), say('  skill linked.'));
@@ -128,7 +133,7 @@ export async function runSetupCli({ yes = false, login = true, out = process.std
     }
 
     say('\nOther MCP clients (Claude Desktop, Cursor, ...): add this server to their config:');
-    say(`  ${JSON.stringify({ mcpServers: { wave: { command: node, args: [BIN] } } })}`);
+    say(`  ${JSON.stringify({ mcpServers: { wave: { command, args } } })}`);
     say('  Agents without skills can read the same guide from the server: resource wave://guide.');
 
     if (!interactive && !yes && planned) say('\nNothing was changed: run in a terminal to confirm each step, or pass --yes.');

@@ -10,7 +10,7 @@ import { registerTransactionTools } from './tools/transactions.js';
 import { registerLiveTransactionTools } from './tools/transactions-live.js';
 import { registerReportTools } from './tools/reports.js';
 import { registerLedgerTools } from './tools/ledger.js';
-import { HOST, cli } from './cli.js';
+import { HOST, PACKAGE_DIR, cli } from './cli.js';
 import { LIMITATIONS_MARKDOWN } from './limitations.js';
 
 export const SERVER_NAME = 'wave-mcp';
@@ -19,7 +19,7 @@ export const VERSION = JSON.parse(fs.readFileSync(new URL('../package.json', imp
 /** The wave-accounting skill without its frontmatter, with this machine's CLI path filled in. */
 export function guideMarkdown() {
   const text = fs.readFileSync(new URL('../skills/wave-accounting/SKILL.md', import.meta.url), 'utf8').replace(/^---\n[\s\S]*?\n---\n+/, '');
-  return text.replaceAll('node <package>/bin/wave-mcp.js', cli()).replaceAll('<package>', cli().replace(/^node /, '').replace(/\/bin\/wave-mcp\.js$/, ''));
+  return text.replaceAll('node <package>/bin/wave-mcp.js', cli()).replaceAll('<package>', PACKAGE_DIR);
 }
 
 export const INSTRUCTIONS = `Wave accounting (waveapps.com). Call wave_get_context first; if credentials are missing or expired the user signs in with ${cli('login')} in a terminal on ${HOST}. Full guide: the wave://guide resource.

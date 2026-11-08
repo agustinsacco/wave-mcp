@@ -121,7 +121,8 @@ Node.js 20 or later. Agents get two things on top of the server:
 ### pi / Phosphor: one command
 
 ```bash
-pi install git:github.com/agustinsacco/wave-mcp
+pi install npm:@saccolabs/wave-mcp          # from npm
+pi install git:github.com/agustinsacco/wave-mcp   # or straight from GitHub
 ```
 
 pi installs the npm dependencies. The package's extension registers the
@@ -136,7 +137,36 @@ Wave is not signed in on <host>. In a terminal there, run: node <package>/bin/wa
 
 A `wave` entry in `mcp.json` takes precedence over the package's registration.
 
-### Claude Code and other clients: `setup`
+### Claude Code, Claude Desktop, Cursor: no clone needed
+
+The package is on npm as
+[`@saccolabs/wave-mcp`](https://www.npmjs.com/package/@saccolabs/wave-mcp).
+`npx` downloads and runs it:
+
+```bash
+claude mcp add --scope user wave -- npx -y @saccolabs/wave-mcp
+```
+
+Other clients take the same command in their config:
+
+```json
+{ "mcpServers": { "wave": { "command": "npx", "args": ["-y", "@saccolabs/wave-mcp"] } } }
+```
+
+Then sign in, in a terminal on the same machine:
+
+```bash
+npx -y @saccolabs/wave-mcp login
+```
+
+Every other command works the same way (`npx -y @saccolabs/wave-mcp check`,
+`… setup`). When the server runs through npx, its sign-in messages show the
+npx command too. These clients don't install the `wave-accounting` skill. They get the
+same guide from the `wave://guide` resource, and the start-here tool points
+to it. `npx -y @saccolabs/wave-mcp setup` adds the server and a copy of the
+skill to Claude Code in one step.
+
+### From a clone: `setup`
 
 ```bash
 git clone https://github.com/agustinsacco/wave-mcp && cd wave-mcp && npm install

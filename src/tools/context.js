@@ -22,6 +22,8 @@ export function registerContextTools(server, ctx) {
       const out = {
         server: { readOnly: ctx.config.readOnly, toolsets: ctx.config.toolsets },
         auth,
+        guide:
+          'Read the wave://guide resource (the wave-accounting skill) before writing. Key rules: read a transaction before editing it and pass expectedSequence; use dryRun first; line amounts include sales tax and must add up to the total; confirm amounts, accounts and email recipients with the user; never ask for tokens in the chat.',
         limitations: LIMITATIONS.summary,
       };
       const NO_LEDGER = 'none imported: transactions and dated reports need wave_import_ledger';

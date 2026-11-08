@@ -76,7 +76,7 @@ const { HOST, cli } = await import(path.join(ROOT, 'src/cli.js'));
 const escape = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 const generic = (text) =>
   String(text ?? '')
-    .replaceAll(cli(), `node <package>/bin/${pkg.name}.js`)
+    .replaceAll(cli(), `node <package>/bin/${Object.keys(pkg.bin)[0]}.js`)
     .replace(new RegExp(`\\bon ${escape(HOST)}\\b`, 'g'), 'on <host>');
 const all = await open(TOOLSETS);
 const info = all.client.getServerVersion();
@@ -98,7 +98,7 @@ lines.push(`# ${info.title || info.name}: tools, resources and prompts`, '');
 lines.push(`Generated from ${pkg.name} ${pkg.version} by \`npm run docs\`; do not edit by hand.`, '');
 const reads = tools.filter((t) => t.annotations?.readOnlyHint).length;
 lines.push(`${tools.length} tools in ${TOOLSETS.length} toolsets (${reads} read, ${tools.length - reads} write), ${resources.length} resources and ${prompts.length} prompts.`);
-lines.push(`Limit the toolsets with \`${pkg.name.replace(/-mcp$/, '').toUpperCase()}_MCP_TOOLSETS\` (comma-separated).`, '');
+lines.push(`Limit the toolsets with \`${Object.keys(pkg.bin)[0].replace(/-mcp$/, '').toUpperCase()}_MCP_TOOLSETS\` (comma-separated).`, '');
 lines.push('## Tools', '');
 for (const [ts, list] of byToolset) {
   lines.push(`### ${ts}`, '', '| Tool | Kind | What it does |', '|---|---|---|');
