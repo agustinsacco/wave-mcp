@@ -1,0 +1,10 @@
+node_modules/
+.env
+*.env
+!credentials.env.example
+credentials.env
+*.lock
+.DS_Store
+npm-debug.log*
+coverage/
+.no-credentials.env

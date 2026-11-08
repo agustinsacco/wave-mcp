@@ -1,0 +1,6414 @@
+directive @cost(complexity: Int, multipliers: [String]) on FIELD_DEFINITION | OBJECT
+
+directive @schemas(include: [Schema!]!) on FIELD_DEFINITION | OBJECT | ENUM | ENUM_VALUE | INPUT_OBJECT | INPUT_FIELD_DEFINITION | INTERFACE | ARGUMENT_DEFINITION | SCALAR | UNION
+
+"""Controls the rate of traffic."""
+directive @rateLimit(
+  """Number of occurrences allowed over duration."""
+  limit: Int! = 60
+
+  """Number of seconds before limit is reset."""
+  duration: Int! = 60
+) on OBJECT | FIELD_DEFINITION
+
+"""Controls the rate of traffic."""
+directive @banLimit(
+  """Number of occurrences allowed over duration."""
+  limit: Int! = 60
+
+  """Number of seconds before limit is reset."""
+  duration: Int! = 60
+) on OBJECT | FIELD_DEFINITION
+
+"""ISO-8601 date object. Format returned will follow `yyyy-MM-dd`."""
+scalar Date
+
+"""
+ISO-8601 date and time object. Format returned will follow `yyyy-MM-ddThh:mm:ss.sssZ` where the timezone is UTC.
+"""
+scalar DateTime
+
+"""
+A signed decimal number, which supports arbitrary precision and is serialized as a string. Example value: `14.99`.
+"""
+scalar Decimal
+
+"""
+A field whose value conforms to the standard URL format as specified in RFC3986: https://www.ietf.org/rfc/rfc3986.txt.
+"""
+scalar URL
+
+"""
+A field whose value is a hex color code: https://en.wikipedia.org/wiki/Web_colors.
+"""
+scalar HexColorCode
+
+"""
+The `JSON` scalar type represents JSON values as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf).
+"""
+scalar JSON
+
+"""An object with an `ID`."""
+interface Node {
+  """ID of the object."""
+  id: ID!
+}
+
+"""Mutation validation error."""
+type InputError {
+  """Path to the input value."""
+  path: [String!]
+
+  """Error message."""
+  message: String
+
+  """Error code."""
+  code: String
+}
+
+"""Information about pagination in a connection."""
+type OffsetPageInfo {
+  """Current page number."""
+  currentPage: Int!
+
+  """Total number of pages in the connection."""
+  totalPages: Int
+
+  """Total number of nodes in the connection."""
+  totalCount: Int
+}
+
+"""The schema’s entry point for queries."""
+type Query {
+  """No-op placeholder for code generation."""
+  _: Boolean
+
+  """Get the current OAuth application."""
+  oAuthApplication: OAuthApplication
+
+  """List currencies."""
+  currencies: [Currency!]!
+
+  """Get a currency."""
+  currency(
+    """Code of currency."""
+    code: CurrencyCode!
+  ): Currency
+
+  """List countries."""
+  countries: [Country!]!
+
+  """Get a country."""
+  country(
+    """Code of country."""
+    code: CountryCode!
+  ): Country
+
+  """Get a province."""
+  province(
+    """Code of province."""
+    code: String!
+  ): Province
+
+  """List businesses."""
+  businesses(
+    """1-based page number to retrieve."""
+    page: Int = 1
+
+    """Limit on how many items each page should return."""
+    pageSize: Int = 10
+
+    """
+    Filter by archived status. If not provided, excludes archived businesses by default.
+    """
+    isArchived: Boolean
+  ): BusinessConnection
+
+  """Get a business."""
+  business(
+    """
+    ID of business.
+    - If defined, it will fetch that business.
+    - If not defined and the access token is restricted to a single business, it will fetch that business.
+    - If not defined and the access token can access multiple businesses, it will fetch the user's default business. To set a default business see https://support.waveapps.com/hc/en-us/articles/208621226.
+    """
+    id: ID
+  ): Business
+
+  """The currently authenticated user."""
+  user: User
+
+  """List types of accounts."""
+  accountTypes: [AccountType!]!
+
+  """List subtypes of accounts."""
+  accountSubtypes: [AccountSubtype!]!
+}
+
+"""The schema’s entry point for mutations."""
+type Mutation {
+  """No-op placeholder for code generation."""
+  _: Boolean
+
+  """Create a customer."""
+  customerCreate(input: CustomerCreateInput!): CustomerCreateOutput
+
+  """Patch a customer."""
+  customerPatch(input: CustomerPatchInput!): CustomerPatchOutput
+
+  """Delete customer."""
+  customerDelete(input: CustomerDeleteInput!): CustomerDeleteOutput
+
+  """Create an account."""
+  accountCreate(input: AccountCreateInput!): AccountCreateOutput
+
+  """Archive an account."""
+  accountArchive(input: AccountArchiveInput!): AccountArchiveOutput
+
+  """Patch an account."""
+  accountPatch(input: AccountPatchInput!): AccountPatchOutput
+
+  """Create a sales tax."""
+  salesTaxCreate(input: SalesTaxCreateInput!): SalesTaxCreateOutput!
+
+  """Update a sales tax."""
+  salesTaxPatch(input: SalesTaxPatchInput!): SalesTaxPatchOutput!
+
+  """Archive a sales tax."""
+  salesTaxArchive(input: SalesTaxArchiveInput!): SalesTaxArchiveOutput!
+
+  """Record manual payment."""
+  invoicePaymentCreateManual(input: InvoicePaymentCreateManualInput!): InvoicePaymentCreateManualOutput
+
+  """Send Invoice Payment Receipt."""
+  invoicePaymentReceiptSend(input: InvoicePaymentReceiptSendInput!): InvoicePaymentReceiptSendOutput
+
+  """Update Invoice Payment."""
+  invoicePaymentPatch(input: InvoicePaymentPatchInput!): InvoicePaymentPatchOutput
+
+  """Delete invoice manual payment."""
+  invoicePaymentDelete(input: InvoicePaymentDeleteInput!): InvoicePaymentDeleteOutput
+
+  """Create an invoice."""
+  invoiceCreate(input: InvoiceCreateInput!): InvoiceCreateOutput
+
+  """Patch an invoice."""
+  invoicePatch(input: InvoicePatchInput!): InvoicePatchOutput
+
+  """Clones an invoice."""
+  invoiceClone(input: InvoiceCloneInput!): InvoiceCloneOutput
+
+  """Delete an invoice."""
+  invoiceDelete(input: InvoiceDeleteInput!): InvoiceDeleteOutput
+
+  """Send an invoice. Requires `Business.emailSendEnabled` to be true."""
+  invoiceSend(input: InvoiceSendInput!): InvoiceSendOutput
+
+  """Approve an invoice."""
+  invoiceApprove(input: InvoiceApproveInput!): InvoiceApproveOutput
+
+  """Mark the invoice as sent."""
+  invoiceMarkSent(input: InvoiceMarkSentInput!): InvoiceMarkSentOutput
+
+  """Create a product."""
+  productCreate(input: ProductCreateInput!): ProductCreateOutput
+
+  """Patch a product."""
+  productPatch(input: ProductPatchInput!): ProductPatchOutput
+
+  """Archive a product."""
+  productArchive(input: ProductArchiveInput!): ProductArchiveOutput
+
+  """
+  **BETA**: Create money transaction. Requires `isClassicAccounting` to be `false`.
+  """
+  moneyTransactionCreate(input: MoneyTransactionCreateInput!): MoneyTransactionCreateOutput
+
+  """
+  **BETA**: Bulk create money transactions. Requires `isClassicAccounting` to be `false`.
+  """
+  moneyTransactionsCreate(input: MoneyTransactionsCreateInput!): MoneyTransactionsCreateOutput
+
+  """Create a money transaction."""
+  moneyDepositTransactionCreate(input: MoneyDepositTransactionCreateInput!): MoneyDepositTransactionCreateOutput @deprecated(reason: "Not available for public use at this time.")
+
+  """Create an estimate."""
+  estimateCreate(input: EstimateCreateInput!): EstimateCreateOutput
+
+  """Approve an estimate."""
+  estimateApprove(input: EstimateApproveInput!): EstimateApproveOutput
+
+  """Delete an estimate."""
+  estimateDelete(input: EstimateDeleteInput!): EstimateDeleteOutput
+
+  """Update an estimate."""
+  estimatePatch(input: EstimatePatchInput!): EstimatePatchOutput
+
+  """Clone an estimate."""
+  estimateClone(input: EstimateCloneInput!): EstimateCloneOutput
+
+  """Convert an estimate into an invoice."""
+  convertEstimateToInvoice(input: ConvertEstimateToInvoiceInput!): ConvertEstimateToInvoiceOutput
+
+  """Mark the estimate as sent."""
+  estimateMarkSent(input: EstimateMarkSentInput!): EstimateMarkSentOutput
+
+  """Mark the estimate as accepted."""
+  estimateMarkAccepted(input: EstimateMarkAcceptedInput!): EstimateMarkAcceptedOutput
+
+  """Reset the estimate acceptance."""
+  estimateResetAcceptance(input: EstimateResetAcceptanceInput!): EstimateResetAcceptanceOutput
+
+  """Send an estimate."""
+  estimateSend(input: EstimateSendInput!): EstimateSendOutput
+
+  """Generate a PDF of the estimate."""
+  estimateGeneratePdf(input: EstimateGeneratePdfInput!): EstimateGeneratePdfOutput
+
+  """Notify customer"""
+  estimateSendAcceptanceCustomerEmail(input: EstimateSendAcceptanceCustomerEmailInput!): EstimateSendAcceptanceCustomerEmailOutput
+
+  """Delete estimate manual payment."""
+  estimatePaymentDelete(input: EstimatePaymentDeleteInput!): EstimatePaymentDeleteOutput
+
+  """Create manual payment for an estimate deposit."""
+  estimateDepositPaymentCreateManual(input: EstimateDepositPaymentCreateManualInput!): EstimatePaymentCreateManualOutput
+
+  """Update manual payment for an estimate deposit."""
+  estimateDepositPaymentUpdateManual(input: EstimateDepositPaymentUpdateManualInput!): EstimatePaymentUpdateManualOutput
+
+  """Send a receipt for an estimate deposit payment."""
+  estimateDepositPaymentReceiptSend(input: EstimateDepositPaymentReceiptSendInput!): EstimateDepositPaymentReceiptSendOutput
+}
+
+"""Wave's schemas."""
+enum Schema {
+  """Available only to approved chatbot integrations."""
+  CHATBOT
+
+  """Available only to HR Block integration."""
+  HRBLOCK
+
+  """Available only to Wave."""
+  INTERNAL
+
+  """Available to all third parties."""
+  PUBLIC
+
+  """Available only to Wave staff."""
+  STAFF
+}
+
+"""An OAuth application."""
+type OAuthApplication implements Node {
+  """The unique identifier for the application."""
+  id: ID!
+
+  """The name of the application."""
+  name: String!
+
+  """A description of the application."""
+  description: String
+
+  """
+  The client identifier issued to the client during the registration process.
+  """
+  clientId: String!
+
+  """The URL to the application logo."""
+  logoUrl: URL
+
+  """
+  Additional data for the application.
+  - If the requested `clientId` does not match that of the current OAuth application, `extraData` will not be returned.
+  """
+  extraData: JSON
+
+  """When the application was created."""
+  createdAt: DateTime!
+
+  """When the application was last modified."""
+  modifiedAt: DateTime!
+}
+
+"""Currency codes based on ISO 4217."""
+enum CurrencyCode {
+  """UAE dirham"""
+  AED
+
+  """Afghani"""
+  AFN
+
+  """Lek"""
+  ALL
+
+  """Armenian dram"""
+  AMD
+
+  """Netherlands Antillean Guilder"""
+  ANG
+
+  """Kwanza"""
+  AOA
+
+  """Argentinian peso"""
+  ARS
+
+  """Australian dollar"""
+  AUD
+
+  """Aruban Guilder"""
+  AWG
+
+  """New Manat"""
+  AZN
+
+  """Convertible Marks"""
+  BAM
+
+  """Barbados dollar"""
+  BBD
+
+  """Taka"""
+  BDT
+
+  """Lev"""
+  BGN
+
+  """Bahraini dinar"""
+  BHD
+
+  """Burundi franc"""
+  BIF
+
+  """Bermuda dollar"""
+  BMD
+
+  """Brunei dollar"""
+  BND
+
+  """Boliviano"""
+  BOB
+
+  """Real"""
+  BRL
+
+  """Bahamian dollar"""
+  BSD
+
+  """Ngultrum"""
+  BTN
+
+  """Pula"""
+  BWP
+
+  """Belarussian rouble"""
+  BYR
+
+  """Belize dollar"""
+  BZD
+
+  """Canadian dollar"""
+  CAD
+
+  """Franc congolais"""
+  CDF
+
+  """Swiss franc"""
+  CHF
+
+  """Chilean peso"""
+  CLP
+
+  """Ren-Min-Bi yuan"""
+  CNY
+
+  """Colombian peso"""
+  COP
+
+  """Costa Rican colon"""
+  CRC
+
+  """Cuban peso"""
+  CUP
+
+  """Cape Verde escudo"""
+  CVE
+
+  """Czech koruna"""
+  CZK
+
+  """Djibouti franc"""
+  DJF
+
+  """Danish krone"""
+  DKK
+
+  """Dominican peso"""
+  DOP
+
+  """Algerian dinar"""
+  DZD
+
+  """Estonian kroon"""
+  EEK
+
+  """Egyptian pound"""
+  EGP
+
+  """Nakfa"""
+  ERN
+
+  """Ethiopian birr"""
+  ETB
+
+  """Euro"""
+  EUR
+
+  """Fiji dollar"""
+  FJD
+
+  """Falkland Islands (Malvinas) Pound"""
+  FKP
+
+  """Pound sterling"""
+  GBP
+
+  """Lari"""
+  GEL
+
+  """Ghana Cedi"""
+  GHS
+
+  """Gibraltar pound"""
+  GIP
+
+  """Dalasi"""
+  GMD
+
+  """Guinean franc"""
+  GNF
+
+  """Quetzal"""
+  GTQ
+
+  """Guinean bissau Peso"""
+  GWP
+
+  """Guyana dollar"""
+  GYD
+
+  """Hong Kong dollar"""
+  HKD
+
+  """Lempira"""
+  HNL
+
+  """Kuna"""
+  HRK
+
+  """Haitian gourde"""
+  HTG
+
+  """Forint"""
+  HUF
+
+  """Rupiah"""
+  IDR
+
+  """New Israeli sheqel"""
+  ILS
+
+  """Indian rupee"""
+  INR
+
+  """Iraqi dinar"""
+  IQD
+
+  """Iranian rial"""
+  IRR
+
+  """Icelandic Krona"""
+  ISK
+
+  """Jamaican dollar"""
+  JMD
+
+  """Jordanian dinar"""
+  JOD
+
+  """Yen"""
+  JPY
+
+  """Kenyan shilling"""
+  KES
+
+  """Kyrgyz Som"""
+  KGS
+
+  """Riel"""
+  KHR
+
+  """Comoro franc"""
+  KMF
+
+  """Won"""
+  KRW
+
+  """Kuwaiti dinar"""
+  KWD
+
+  """Cayman Islands dollar"""
+  KYD
+
+  """Tenge"""
+  KZT
+
+  """Kip"""
+  LAK
+
+  """Lebanese pound"""
+  LBP
+
+  """Sri Lankan rupee"""
+  LKR
+
+  """Liberian dollar"""
+  LRD
+
+  """Loti"""
+  LSL
+
+  """Lithuanian litus"""
+  LTL
+
+  """Latvian lats"""
+  LVL
+
+  """Libyan dinar"""
+  LYD
+
+  """Moroccan dirham"""
+  MAD
+
+  """Moldovan leu"""
+  MDL
+
+  """Malagasy Ariary"""
+  MGA
+
+  """Denar"""
+  MKD
+
+  """Kyat"""
+  MMK
+
+  """Tugrik"""
+  MNT
+
+  """Pataca"""
+  MOP
+
+  """Ouguiya"""
+  MRO
+
+  """Ouguiya"""
+  MRU
+
+  """Mauritian rupee"""
+  MUR
+
+  """Rufiyaa"""
+  MVR
+
+  """Kwacha"""
+  MWK
+
+  """Mexican peso"""
+  MXN
+
+  """Malaysian ringgit"""
+  MYR
+
+  """Metical"""
+  MZN
+
+  """Namibian dollar"""
+  NAD
+
+  """Naira"""
+  NGN
+
+  """Cordoba Oro"""
+  NIO
+
+  """Norwegian krone"""
+  NOK
+
+  """Nepalese rupee"""
+  NPR
+
+  """New Zealand dollar"""
+  NZD
+
+  """Omani rial"""
+  OMR
+
+  """Balboa"""
+  PAB
+
+  """Nuevo Sol"""
+  PEN
+
+  """Kina"""
+  PGK
+
+  """Philippine peso"""
+  PHP
+
+  """Pakistani rupee"""
+  PKR
+
+  """Zloty"""
+  PLN
+
+  """Guarani"""
+  PYG
+
+  """Qatari riyal"""
+  QAR
+
+  """New Leu"""
+  RON
+
+  """Serbian Dinar"""
+  RSD
+
+  """Russian rouble"""
+  RUB
+
+  """Rwanda franc"""
+  RWF
+
+  """Saudi riyal"""
+  SAR
+
+  """Solomon Islands Dollar"""
+  SBD
+
+  """Seychelles rupee"""
+  SCR
+
+  """Sudanese Pound"""
+  SDG
+
+  """Swedish Krona"""
+  SEK
+
+  """Singapore dollar"""
+  SGD
+
+  """Saint Helena Pound"""
+  SHP
+
+  """Leone"""
+  SLL
+
+  """Somali shilling"""
+  SOS
+
+  """Surinam dollar"""
+  SRD
+
+  """South Sudanese pound"""
+  SSP
+
+  """Dobra"""
+  STD
+
+  """El Salvador colon"""
+  SVC
+
+  """Syrian pound"""
+  SYP
+
+  """Lilangeni"""
+  SZL
+
+  """Baht"""
+  THB
+
+  """Somoni"""
+  TJS
+
+  """Manat"""
+  TMM
+
+  """Tunisian dinar"""
+  TND
+
+  """Pa'anga"""
+  TOP
+
+  """Turkish Lira"""
+  TRY
+
+  """Trinidad and Tobago dollar"""
+  TTD
+
+  """Taiwan New Dollar"""
+  TWD
+
+  """Tanzanian shilling"""
+  TZS
+
+  """Hryvnia"""
+  UAH
+
+  """Ugandan shilling"""
+  UGX
+
+  """United States dollar"""
+  USD
+
+  """Uruguayo peso"""
+  UYU
+
+  """Uzbekistan sum"""
+  UZS
+
+  """Bolivar Fuerte"""
+  VEF
+
+  """Dong"""
+  VND
+
+  """Vatu"""
+  VUV
+
+  """Samoan Tala"""
+  WST
+
+  """CFA Franc - BEAC"""
+  XAF
+
+  """Eastern Caribbean dollar"""
+  XCD
+
+  """CFA franc - BCEAO"""
+  XOF
+
+  """Comptoirs Francais du Pacifique Francs"""
+  XPF
+
+  """Yemeni rial"""
+  YER
+
+  """Rand"""
+  ZAR
+
+  """Kwacha"""
+  ZMK
+
+  """Kwacha"""
+  ZMW
+
+  """Zimbabwean dollar"""
+  ZWD
+}
+
+"""A medium of exchange in common use."""
+type Currency {
+  """Currency code."""
+  code: CurrencyCode!
+
+  """Symbol used to denote that a number is a monetary value."""
+  symbol: String!
+
+  """Plain-language representation."""
+  name: String!
+
+  """Plural version of currency name."""
+  plural: String!
+
+  """
+  Expresses the relationship between a major currency unit and its minor currency unit. The number of digits found to the right of the decimal place to represent the fractional part of this currency (assumes a base of 10).
+  """
+  exponent: Int!
+}
+
+"""A medium of exchange in common use."""
+type Money {
+  """Value represented in only the minor currency unit."""
+  raw: Int! @deprecated(reason: "Use `minorUnitValue` instead, as `raw` can overflow for large numbers.")
+
+  """Value represented in only the minor currency unit."""
+  minorUnitValue: Decimal!
+
+  """
+  Amount represented as a combination of the major and minor currency unit (uses a decimal separator).
+  """
+  value: String!
+
+  """Currency"""
+  currency: Currency!
+}
+
+"""
+Country codes ([ISO 3166-1 alpha-2](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2)).
+"""
+enum CountryCode {
+  """Andorra"""
+  AD
+
+  """United Arab Emirates"""
+  AE
+
+  """Afghanistan"""
+  AF
+
+  """Antigua and Barbuda"""
+  AG
+
+  """Anguilla"""
+  AI
+
+  """Albania"""
+  AL
+
+  """Armenia"""
+  AM
+
+  """Angola"""
+  AO
+
+  """Antarctica"""
+  AQ
+
+  """Argentina"""
+  AR
+
+  """American Samoa"""
+  AS
+
+  """Austria"""
+  AT
+
+  """Australia"""
+  AU
+
+  """Aruba"""
+  AW
+
+  """Åland Islands"""
+  AX
+
+  """Azerbaijan"""
+  AZ
+
+  """Bosnia and Herzegovina"""
+  BA
+
+  """Barbados"""
+  BB
+
+  """Bangladesh"""
+  BD
+
+  """Belgium"""
+  BE
+
+  """Burkina Faso"""
+  BF
+
+  """Bulgaria"""
+  BG
+
+  """Bahrain"""
+  BH
+
+  """Burundi"""
+  BI
+
+  """Benin"""
+  BJ
+
+  """Saint Barthélemy"""
+  BL
+
+  """Bermuda"""
+  BM
+
+  """Brunei Darussalam"""
+  BN
+
+  """Bolivia, Plurinational State of"""
+  BO
+
+  """Bonaire, Sint Eustatius and Saba"""
+  BQ
+
+  """Brazil"""
+  BR
+
+  """Bahamas"""
+  BS
+
+  """Bhutan"""
+  BT
+
+  """Bouvet Island"""
+  BV
+
+  """Botswana"""
+  BW
+
+  """Belarus"""
+  BY
+
+  """Belize"""
+  BZ
+
+  """Canada"""
+  CA
+
+  """Cocos (Keeling) Islands"""
+  CC
+
+  """Congo, The Democratic Republic of the"""
+  CD
+
+  """Central African Republic"""
+  CF
+
+  """Congo"""
+  CG
+
+  """Switzerland"""
+  CH
+
+  """Côte d'Ivoire"""
+  CI
+
+  """Cook Islands"""
+  CK
+
+  """Chile"""
+  CL
+
+  """Cameroon"""
+  CM
+
+  """China"""
+  CN
+
+  """Colombia"""
+  CO
+
+  """Costa Rica"""
+  CR
+
+  """Cuba"""
+  CU
+
+  """Cape Verde"""
+  CV
+
+  """Curaçao"""
+  CW
+
+  """Christmas Island"""
+  CX
+
+  """Cyprus"""
+  CY
+
+  """Czech Republic"""
+  CZ
+
+  """Germany"""
+  DE
+
+  """Djibouti"""
+  DJ
+
+  """Denmark"""
+  DK
+
+  """Dominica"""
+  DM
+
+  """Dominican Republic"""
+  DO
+
+  """Algeria"""
+  DZ
+
+  """Ecuador"""
+  EC
+
+  """Estonia"""
+  EE
+
+  """Egypt"""
+  EG
+
+  """Western Sahara"""
+  EH
+
+  """Eritrea"""
+  ER
+
+  """Spain"""
+  ES
+
+  """Ethiopia"""
+  ET
+
+  """Finland"""
+  FI
+
+  """Fiji"""
+  FJ
+
+  """Falkland Islands"""
+  FK
+
+  """Micronesia, Federated States of"""
+  FM
+
+  """Faroe Islands"""
+  FO
+
+  """France"""
+  FR
+
+  """Gabon"""
+  GA
+
+  """United Kingdom"""
+  GB
+
+  """Grenada"""
+  GD
+
+  """Georgia"""
+  GE
+
+  """French Guiana"""
+  GF
+
+  """Guernsey"""
+  GG
+
+  """Ghana"""
+  GH
+
+  """Gibraltar"""
+  GI
+
+  """Greenland"""
+  GL
+
+  """Gambia"""
+  GM
+
+  """Guinea"""
+  GN
+
+  """Guadeloupe"""
+  GP
+
+  """Equatorial Guinea"""
+  GQ
+
+  """Greece"""
+  GR
+
+  """South Georgia and the South Sandwich Islands"""
+  GS
+
+  """Guatemala"""
+  GT
+
+  """Guam"""
+  GU
+
+  """Guinea-Bissau"""
+  GW
+
+  """Guyana"""
+  GY
+
+  """Hong Kong"""
+  HK
+
+  """Heard Island and McDonald Islands"""
+  HM
+
+  """Honduras"""
+  HN
+
+  """Croatia"""
+  HR
+
+  """Haiti"""
+  HT
+
+  """Hungary"""
+  HU
+
+  """Indonesia"""
+  ID
+
+  """Ireland"""
+  IE
+
+  """Israel"""
+  IL
+
+  """Isle of Man"""
+  IM
+
+  """India"""
+  IN
+
+  """British Indian Ocean Territory"""
+  IO
+
+  """Iraq"""
+  IQ
+
+  """Iran"""
+  IR
+
+  """Iceland"""
+  IS
+
+  """Italy"""
+  IT
+
+  """Jersey"""
+  JE
+
+  """Jamaica"""
+  JM
+
+  """Jordan"""
+  JO
+
+  """Japan"""
+  JP
+
+  """Kenya"""
+  KE
+
+  """Kyrgyzstan"""
+  KG
+
+  """Cambodia"""
+  KH
+
+  """Kiribati"""
+  KI
+
+  """Comoros"""
+  KM
+
+  """Saint Kitts and Nevis"""
+  KN
+
+  """Korea, Democratic People's Republic of"""
+  KP
+
+  """Korea, Republic of"""
+  KR
+
+  """Kuwait"""
+  KW
+
+  """Cayman Islands"""
+  KY
+
+  """Kazakhstan"""
+  KZ
+
+  """Lao People's Democratic Republic"""
+  LA
+
+  """Lebanon"""
+  LB
+
+  """Saint Lucia"""
+  LC
+
+  """Liechtenstein"""
+  LI
+
+  """Sri Lanka"""
+  LK
+
+  """Liberia"""
+  LR
+
+  """Lesotho"""
+  LS
+
+  """Lithuania"""
+  LT
+
+  """Luxembourg"""
+  LU
+
+  """Latvia"""
+  LV
+
+  """Libya"""
+  LY
+
+  """Morocco"""
+  MA
+
+  """Monaco"""
+  MC
+
+  """Moldova, Republic of"""
+  MD
+
+  """Montenegro"""
+  ME
+
+  """Saint Martin"""
+  MF
+
+  """Madagascar"""
+  MG
+
+  """Marshall Islands"""
+  MH
+
+  """North Macedonia"""
+  MK
+
+  """Mali"""
+  ML
+
+  """Myanmar"""
+  MM
+
+  """Mongolia"""
+  MN
+
+  """Macao"""
+  MO
+
+  """Northern Mariana Islands"""
+  MP
+
+  """Martinique"""
+  MQ
+
+  """Mauritania"""
+  MR
+
+  """Montserrat"""
+  MS
+
+  """Malta"""
+  MT
+
+  """Mauritius"""
+  MU
+
+  """Maldives"""
+  MV
+
+  """Malawi"""
+  MW
+
+  """Mexico"""
+  MX
+
+  """Malaysia"""
+  MY
+
+  """Mozambique"""
+  MZ
+
+  """Namibia"""
+  NA
+
+  """New Caledonia"""
+  NC
+
+  """Niger"""
+  NE
+
+  """Norfolk Island"""
+  NF
+
+  """Nigeria"""
+  NG
+
+  """Nicaragua"""
+  NI
+
+  """Netherlands"""
+  NL
+
+  """Norway"""
+  NO
+
+  """Nepal"""
+  NP
+
+  """Nauru"""
+  NR
+
+  """Niue"""
+  NU
+
+  """New Zealand"""
+  NZ
+
+  """Oman"""
+  OM
+
+  """Panama"""
+  PA
+
+  """Peru"""
+  PE
+
+  """French Polynesia"""
+  PF
+
+  """Papua New Guinea"""
+  PG
+
+  """Philippines"""
+  PH
+
+  """Pakistan"""
+  PK
+
+  """Poland"""
+  PL
+
+  """Saint Pierre and Miquelon"""
+  PM
+
+  """Pitcairn"""
+  PN
+
+  """Puerto Rico"""
+  PR
+
+  """Palestine"""
+  PS
+
+  """Portugal"""
+  PT
+
+  """Palau"""
+  PW
+
+  """Paraguay"""
+  PY
+
+  """Qatar"""
+  QA
+
+  """Réunion"""
+  RE
+
+  """Romania"""
+  RO
+
+  """Serbia"""
+  RS
+
+  """Russian Federation"""
+  RU
+
+  """Rwanda"""
+  RW
+
+  """Saudi Arabia"""
+  SA
+
+  """Solomon Islands"""
+  SB
+
+  """Seychelles"""
+  SC
+
+  """Sudan"""
+  SD
+
+  """Sweden"""
+  SE
+
+  """Singapore"""
+  SG
+
+  """Saint Helena, Ascension and Tristan da Cunha"""
+  SH
+
+  """Slovenia"""
+  SI
+
+  """Svalbard and Jan Mayen"""
+  SJ
+
+  """Slovakia"""
+  SK
+
+  """Sierra Leone"""
+  SL
+
+  """San Marino"""
+  SM
+
+  """Senegal"""
+  SN
+
+  """Somalia"""
+  SO
+
+  """Suriname"""
+  SR
+
+  """South Sudan"""
+  SS
+
+  """Sao Tome and Principe"""
+  ST
+
+  """El Salvador"""
+  SV
+
+  """Sint Maarten"""
+  SX
+
+  """Syria"""
+  SY
+
+  """Eswatini"""
+  SZ
+
+  """Turks and Caicos Islands"""
+  TC
+
+  """Chad"""
+  TD
+
+  """French Southern Territories"""
+  TF
+
+  """Togo"""
+  TG
+
+  """Thailand"""
+  TH
+
+  """Tajikistan"""
+  TJ
+
+  """Tokelau"""
+  TK
+
+  """Timor-Leste"""
+  TL
+
+  """Turkmenistan"""
+  TM
+
+  """Tunisia"""
+  TN
+
+  """Tonga"""
+  TO
+
+  """Turkey"""
+  TR
+
+  """Trinidad and Tobago"""
+  TT
+
+  """Tuvalu"""
+  TV
+
+  """Taiwan"""
+  TW
+
+  """Tanzania, United Republic of"""
+  TZ
+
+  """Ukraine"""
+  UA
+
+  """Uganda"""
+  UG
+
+  """United States Minor Outlying Islands"""
+  UM
+
+  """United States"""
+  US
+
+  """Uruguay"""
+  UY
+
+  """Uzbekistan"""
+  UZ
+
+  """Holy See"""
+  VA
+
+  """Saint Vincent and the Grenadines"""
+  VC
+
+  """Venezuela, Bolivarian Republic of"""
+  VE
+
+  """Virgin Islands (British)"""
+  VG
+
+  """Virgin Islands (U.S)"""
+  VI
+
+  """Viet Nam"""
+  VN
+
+  """Vanuatu"""
+  VU
+
+  """Wallis and Futuna"""
+  WF
+
+  """Samoa"""
+  WS
+
+  """Yemen"""
+  YE
+
+  """Mayotte"""
+  YT
+
+  """South Africa"""
+  ZA
+
+  """Zambia"""
+  ZM
+
+  """Zimbabwe"""
+  ZW
+}
+
+"""An address."""
+type Address {
+  """Address line 1 (Street address/PO Box/Company name)."""
+  addressLine1: String
+
+  """Address line 2 (Apartment/Suite/Unit/Building)."""
+  addressLine2: String
+
+  """City/District/Suburb/Town/Village."""
+  city: String
+
+  """State/County/Province/Region."""
+  province: Province
+
+  """Country."""
+  country: Country
+
+  """Zip/Postal Code."""
+  postalCode: String
+}
+
+"""An address."""
+input AddressInput {
+  """Address line 1 (Street address/PO Box/Company name)."""
+  addressLine1: String
+
+  """Address line 2 (Apartment/Suite/Unit/Building)."""
+  addressLine2: String
+
+  """City/District/Suburb/Town/Village."""
+  city: String
+
+  """
+  State/County/Province/Region Code ([ISO 3166-2](https://en.wikipedia.org/wiki/ISO_3166-2)).
+  """
+  provinceCode: String
+
+  """Country Code."""
+  countryCode: CountryCode
+
+  """Zip/Postal Code."""
+  postalCode: String
+}
+
+"""A country."""
+type Country {
+  """Country code."""
+  code: CountryCode!
+
+  """Plain-language representation."""
+  name: String!
+
+  """Default currency of the country."""
+  currency: Currency!
+
+  """Name of the country with the appropriate article."""
+  nameWithArticle: String!
+
+  """List of principal subdivisions."""
+  provinces: [Province!]!
+}
+
+"""A state/county/province/region."""
+type Province {
+  """Informal name for identification."""
+  slug: String @deprecated(reason: "Nonstandard values. Use code instead.")
+
+  """[ISO 3166-2](https://en.wikipedia.org/wiki/ISO_3166-2) identifier."""
+  code: String!
+
+  """Plain-lanuage representaton."""
+  name: String!
+}
+
+"""An organization and legal entity made up of an association of people."""
+type Business implements Node {
+  """The unique identifier for the business."""
+  id: ID!
+
+  """The name of the business."""
+  name: String!
+
+  """
+  Is the business a personal one with limited functionality compared to regular businesses.
+  """
+  isPersonal: Boolean!
+
+  """The organization type of the business."""
+  organizationalType: OrganizationalType
+
+  """The type of the business."""
+  type: BusinessType
+
+  """The subtype of the business."""
+  subtype: BusinessSubtype
+
+  """The currency of the business."""
+  currency: Currency!
+
+  """The timezone of the business."""
+  timezone: String
+
+  """The address of the business."""
+  address: Address
+
+  """The phone number of the business."""
+  phone: String
+
+  """The fax number of the business."""
+  fax: String
+
+  """The mobile/cell number of the business."""
+  mobile: String
+
+  """The toll free number of the business."""
+  tollFree: String
+
+  """The website of the business."""
+  website: String
+
+  """Does business use classic accounting system."""
+  isClassicAccounting: Boolean! @deprecated(reason: "Classic Accounting is deprecated")
+
+  """Does business use classic invoicing system."""
+  isClassicInvoicing: Boolean! @deprecated(reason: "Classic Invoicing is deprecated")
+
+  """Is the business hidden from view by default."""
+  isArchived: Boolean!
+
+  """When the business was created."""
+  createdAt: DateTime!
+
+  """When the business was last modified."""
+  modifiedAt: DateTime!
+
+  """Get a customer of the business."""
+  customer(
+    """ID of customer."""
+    id: ID!
+  ): Customer
+
+  """List of customers for the business."""
+  customers(
+    """1-based page number to retrieve."""
+    page: Int = 1
+
+    """Limit on how many items each page should return."""
+    pageSize: Int = 45
+
+    """Order result by specified options."""
+    sort: [CustomerSort!]! = [CREATED_AT_DESC]
+
+    """Find customers matching an email address."""
+    email: String
+
+    """If passed will filter the customers by their archived state"""
+    isArchived: Boolean
+
+    """Find customers that were modified after this date."""
+    modifiedAtAfter: DateTime
+
+    """Find customers that were modified before this date."""
+    modifiedAtBefore: DateTime
+  ): CustomerConnection
+
+  """Get an account of the business."""
+  account(
+    """ID of account."""
+    id: ID!
+  ): Account
+
+  """Chart of Accounts for the business."""
+  accounts(
+    """1-based page number to retrieve."""
+    page: Int = 1
+
+    """Limit on how many items each page should return."""
+    pageSize: Int = 45
+
+    """Find accounts matching one of these subtypes."""
+    subtypes: [AccountSubtypeValue!]
+
+    """Excludes accounts matching one of these subtypes."""
+    excludedSubtypes: [AccountSubtypeValue!]
+
+    """Find accounts matching one of these types."""
+    types: [AccountTypeValue!]
+
+    """Find accounts matching isArchived. Use null to not filter."""
+    isArchived: Boolean = false
+  ): AccountConnection
+
+  """Get a sales tax of the business."""
+  salesTax(
+    """ID of sales tax."""
+    id: ID!
+  ): SalesTax
+
+  """List of sales taxes for the business."""
+  salesTaxes(
+    """Find sales taxes matching isArchived. Use null to not filter."""
+    isArchived: Boolean = false
+
+    """Find sales taxes that were modified after this date."""
+    modifiedAtAfter: DateTime
+
+    """Find sales taxes that were modified before this date."""
+    modifiedAtBefore: DateTime
+
+    """1-based page number to retrieve."""
+    page: Int = 1
+
+    """Limit on how many items each page should return."""
+    pageSize: Int = 45
+  ): SalesTaxConnection
+
+  """Invoice payments"""
+  invoicePayment(
+    """ID of invoice payment"""
+    id: ID!
+  ): InvoicePayment
+
+  """Get an invoice of the business."""
+  invoice(
+    """ID of invoice."""
+    id: ID!
+  ): Invoice
+
+  """List of invoices for the business."""
+  invoices(
+    """1-based page number to retrieve."""
+    page: Int = 1
+
+    """Limit on how many items each page should return."""
+    pageSize: Int = 45
+
+    """Order result by specified options."""
+    sort: [InvoiceSort!]! = [CREATED_AT_DESC]
+
+    """Find invoices by status."""
+    status: InvoiceStatus
+
+    """Find invoices for a customer."""
+    customerId: ID
+
+    """Find invoices in a currency."""
+    currency: CurrencyCode
+
+    """Find invoices that were created from a particular source."""
+    sourceId: ID
+
+    """Find invoices dated on or after this date."""
+    invoiceDateStart: Date
+
+    """Find invoices dated before or on this date."""
+    invoiceDateEnd: Date
+
+    """Find invoices that were modified after this date."""
+    modifiedAtAfter: DateTime
+
+    """Find invoices that were modified before this date."""
+    modifiedAtBefore: DateTime
+
+    """
+    Find invoices with invoice number containing this string. Note that a query for `12` would find invoices with numbers `12`, `112`, `120`, `121`, `122`, etc.
+    """
+    invoiceNumber: String
+
+    """Find invoices that have this exact amount due."""
+    amountDue: Decimal
+  ): InvoiceConnection
+
+  """
+  Indicates whether Wave email sending features, such as sending invoices, are enabled for this business
+  """
+  emailSendEnabled: Boolean!
+
+  """List of vendors for the business."""
+  vendors(
+    """1-based page number to retrieve."""
+    page: Int = 1
+
+    """Limit on how many items each page should return."""
+    pageSize: Int = 45
+
+    """Find vendors matching an email address."""
+    email: String
+
+    """Find vendors that were modified after this date."""
+    modifiedAtAfter: DateTime
+
+    """Find vendors that were modified before this date."""
+    modifiedAtBefore: DateTime
+  ): VendorConnection
+
+  """Get a vendor of the business."""
+  vendor(
+    """Id of vendor"""
+    id: ID!
+  ): Vendor
+
+  """Invoice and estimate settings for the business."""
+  invoiceEstimateSettings: InvoiceEstimateSettings!
+
+  """Get a product (or service) of the business."""
+  product(
+    """ID of product."""
+    id: ID!
+  ): Product
+
+  """List of products (and services) for the business."""
+  products(
+    """1-based page number to retrieve."""
+    page: Int = 1
+
+    """Limit on how many items each page should return."""
+    pageSize: Int = 45
+
+    """Order result by specified options."""
+    sort: [ProductSort!]! = [CREATED_AT_DESC]
+
+    """Find products sold by the business."""
+    isSold: Boolean
+
+    """Find products bought by the business."""
+    isBought: Boolean
+
+    """Find products matching isArchived. Use null to not filter."""
+    isArchived: Boolean = false
+
+    """Find products that were modified after this date."""
+    modifiedAtAfter: DateTime
+
+    """Find products that were modified before this date."""
+    modifiedAtBefore: DateTime
+  ): ProductConnection
+
+  """Get a single estimate for a business."""
+  estimate(
+    """ID of estimate."""
+    id: ID!
+
+    """Embed attachments."""
+    embedAttachments: Boolean
+    embedHistory: Boolean
+    embedDepositPayments: Boolean
+  ): AREstimate
+
+  """List of estimates for the business."""
+  estimates(
+    """1-based page number to retrieve."""
+    page: Int = 1
+
+    """Limit on how many items each page should return."""
+    pageSize: Int = 45
+
+    """Order result by specified option."""
+    sort: EstimateSort! = CREATED_AT_DESC
+
+    """Find estimates by status."""
+    status: EstimateListStatusFilter
+
+    """Find estimates for a customer."""
+    customerId: ID
+
+    """Find estimates in a currency."""
+    currency: CurrencyCode
+
+    """Find estimates dated on or after this date."""
+    estimateDateStart: Date
+
+    """Find estimates dated before or on this date."""
+    estimateDateEnd: Date
+
+    """Find estimates that were modified after this date."""
+    modifiedAtAfter: DateTime
+
+    """Find estimates that were modified before this date."""
+    modifiedAtBefore: DateTime
+
+    """
+    Find estimates with estimate number containing this string. Note that a query for `12` would find estimates with numbers `12`, `112`, `120`, `121`, `122`, etc.
+    """
+    estimateNumber: String
+
+    """Find estimates that have this exact amount due."""
+    amountDue: Decimal
+  ): EstimateConnection
+
+  """Get Estimate payment or refund"""
+  estimatePayment(
+    """ID of estimate payment"""
+    id: ID!
+  ): EstimatePayment
+}
+
+"""A user is an individual's account."""
+type User implements Node {
+  """The unique identifier for the user."""
+  id: ID!
+
+  """The user's primary email address."""
+  defaultEmail: String
+
+  """The user's first name."""
+  firstName: String
+
+  """The user's last name."""
+  lastName: String
+
+  """When the user was created."""
+  createdAt: DateTime!
+
+  """When the user was last modified."""
+  modifiedAt: DateTime!
+}
+
+"""Area of focus of a business."""
+enum BusinessTypeValue {
+  """Artists, Photographers & Creative Types"""
+  ARTISTS_PHOTOGRAPHERS_CREATIVE
+
+  """Consultants & Professionals"""
+  CONSULTANTS_PROFESSIONALS
+
+  """Financial Services"""
+  FINANCE_INSURANCE
+
+  """Hair, Spa & Aesthetics"""
+  HAIR_SPA_AESTHETICS
+
+  """Medical, Dental, Health"""
+  MEDICAL_DENTAL_HEALTH_SERVICE
+
+  """Non-profits, Associations & Groups"""
+  NONPROFIT_ASSOCIATIONS_GROUPS
+
+  """Other (please specify)"""
+  OTHER
+
+  """General: I make or sell a PRODUCT"""
+  PRODUCT_PROVIDER
+
+  """Real Estate, Construction & Home Improvement"""
+  REALESTATE_HOME
+
+  """Retailers, Resellers & Sales"""
+  RETAILERS_AND_RESELLERS
+
+  """General: I provide a SERVICE"""
+  SERVICE_PROVIDER
+
+  """Web, Tech & Media"""
+  WEB_MEDIA_FREELANCER
+}
+
+"""Granular area of focus of a business."""
+enum BusinessSubtypeValue {
+  """Advertising, Public Relations"""
+  ADVERTISING_PUBLIC_RELATIONS
+
+  """Agriculture, Ranching and Farming"""
+  AGRICULTURE_RANCHING_FARMING
+
+  """Actor"""
+  ARTISTS_PHOTOGRAPHERS_CREATIVE__ACTOR
+
+  """Audio/Visual Production"""
+  ARTISTS_PHOTOGRAPHERS_CREATIVE__AUDIO_VISUAL_PRODUCTION
+
+  """Craftsperson"""
+  ARTISTS_PHOTOGRAPHERS_CREATIVE__CRAFTSPERSON
+
+  """Dancer, Choreographer"""
+  ARTISTS_PHOTOGRAPHERS_CREATIVE__DANCER_CHOREOG
+
+  """Musician"""
+  ARTISTS_PHOTOGRAPHERS_CREATIVE__MUSICIAN
+
+  """Other Creative"""
+  ARTISTS_PHOTOGRAPHERS_CREATIVE__OTHER
+
+  """Performing Arts (acting, music, dance)"""
+  ARTISTS_PHOTOGRAPHERS_CREATIVE__PERFORMING_ARTS_ACTING_MUSIC_DANCE
+
+  """Photographer"""
+  ARTISTS_PHOTOGRAPHERS_CREATIVE__PHOTOGRAPHER
+
+  """Visual Artist"""
+  ARTISTS_PHOTOGRAPHERS_CREATIVE__VISUAL_ARTIST
+
+  """Automotive Repair & Sales"""
+  AUTOMOTIVE_SALES_AND_REPAIR
+
+  """Church, Religious Organization"""
+  CHURCH_RELIGIOUS_ORGANIZATION
+
+  """Contractor"""
+  CONSTRUCTION_HOME_IMPROVEMENT__CONTRACTOR
+
+  """Engineer"""
+  CONSTRUCTION_HOME_IMPROVEMENT__ENGINEER
+
+  """Home Inspector"""
+  CONSTRUCTION_HOME_IMPROVEMENT__HOME_INSPECTOR
+
+  """Trade"""
+  CONSTRUCTION_HOME_IMPROVEMENT__OTHER_TRADES
+
+  """Accountant, Bookkeeper"""
+  CONSULTANTS_PROFESSIONALS__ACCOUNTANTS_BOOKKEEPERS
+
+  """Communications, Marketing, PR"""
+  CONSULTANTS_PROFESSIONALS__COMMUNICATIONS
+
+  """Executive Coach"""
+  CONSULTANTS_PROFESSIONALS__EXECUTIVE_COACH
+
+  """HR, Recruitment, Staffing"""
+  CONSULTANTS_PROFESSIONALS__HR_RECRUITMENT_STAFFING
+
+  """IT, Technical"""
+  CONSULTANTS_PROFESSIONALS__IT_TECHNICAL
+
+  """Other Consultant"""
+  CONSULTANTS_PROFESSIONALS__OTHER
+
+  """Sales"""
+  CONSULTANTS_PROFESSIONALS__SALES
+
+  """Design, Architecture, Engineering"""
+  DESIGN_ARCHITECTURE_ENGINEERING
+
+  """Other Financial Service"""
+  FINANCIAL_SERVICES
+
+  """Salon, Spa"""
+  HAIR_SPA_AESTHETICS__HAIR_SALON
+
+  """Massage"""
+  HAIR_SPA_AESTHETICS__MASSAGE
+
+  """Nails, Skin, Aesthetics"""
+  HAIR_SPA_AESTHETICS__NAIL_SKIN_AESTHETICS
+
+  """Other Aesthetics/Spa"""
+  HAIR_SPA_AESTHETICS__OTHER
+
+  """Insurance Agency, Broker"""
+  INSURANCE_AGENCY_BROKER
+
+  """Landlord"""
+  LANDLORD_PROPERTY_MANAGER__LANDLORD
+
+  """Property Manager"""
+  LANDLORD_PROPERTY_MANAGER__PROPERTY_MANAGER
+
+  """Lawn Care, Landscaping"""
+  LAWN_CARE_LANDSCAPING
+
+  """Legal Services"""
+  LEGAL_SERVICES
+
+  """Lodging, Hotel, Motel"""
+  LODGING_HOTEL_MOTEL
+
+  """Manufacturing Representative, Agent"""
+  MANUFACTURER_REPRESENTATIVE_AGENT
+
+  """Chiropractor"""
+  MEDICAL_DENTAL_HEALTH_SERVICE__CHIROPRACTOR
+
+  """Dentist"""
+  MEDICAL_DENTAL_HEALTH_SERVICE__DENTIST
+
+  """Fitness"""
+  MEDICAL_DENTAL_HEALTH_SERVICE__FITNESS
+
+  """Massage Therapist"""
+  MEDICAL_DENTAL_HEALTH_SERVICE__MASSAGE_THERAPIST
+
+  """Mental Health"""
+  MEDICAL_DENTAL_HEALTH_SERVICE__MENTAL_HEALTH
+
+  """Nutrition"""
+  MEDICAL_DENTAL_HEALTH_SERVICE__NUTRITION
+
+  """Occupational Therapist"""
+  MEDICAL_DENTAL_HEALTH_SERVICE__OCCUP_THERAPIST
+
+  """Other Health"""
+  MEDICAL_DENTAL_HEALTH_SERVICE__OTHER
+
+  """Physical Therapist"""
+  MEDICAL_DENTAL_HEALTH_SERVICE__PHYSICAL_THERAPIST
+
+  """Association"""
+  NONPROFIT_ASSOCIATIONS_GROUPS__ASSOCIATION
+
+  """Charity"""
+  NONPROFIT_ASSOCIATIONS_GROUPS__CHARITABLE
+
+  """Club"""
+  NONPROFIT_ASSOCIATIONS_GROUPS__CLUB
+
+  """Condo"""
+  NONPROFIT_ASSOCIATIONS_GROUPS__CONDO
+
+  """Other Non-Profit"""
+  NONPROFIT_ASSOCIATIONS_GROUPS__OTHER
+
+  """Parent Booster USA"""
+  NONPROFIT_ASSOCIATIONS_GROUPS__PARENT_BOOSTER
+
+  """Other (please specify)"""
+  OTHER__OTHER_PLEASE_SPECIFY
+
+  """Manufacturer"""
+  PRODUCT_PROVIDER__MANUFACTURER
+
+  """Manufacturer and Vendor"""
+  PRODUCT_PROVIDER__MANUFACTURER_AND_VENDOR
+
+  """Other Product-based Business"""
+  PRODUCT_PROVIDER__OTHER
+
+  """Vendor"""
+  PRODUCT_PROVIDER__VENDOR
+
+  """Real Estate Agent"""
+  REAL_ESTATE_SALES__AGENT
+
+  """Real Estate Broker"""
+  REAL_ESTATE_SALES__BROKER
+
+  """Other Real Estate"""
+  REAL_ESTATE_SALES__OTHER
+
+  """Real Estate Rental"""
+  RENTAL
+
+  """Repairs/Maintenance"""
+  REPAIR_AND_MAINTENANCE
+
+  """Restaurant, Caterer, Bar"""
+  RESTAURANT_CATERER_BAR
+
+  """eBay Resellers"""
+  RETAILERS_AND_RESELLERS__EBAY
+
+  """Etsy Vendors"""
+  RETAILERS_AND_RESELLERS__ETSY
+
+  """Non-Store Retailers"""
+  RETAILERS_AND_RESELLERS__NON_STORE_RETAILER
+
+  """Other Retailers"""
+  RETAILERS_AND_RESELLERS__OTHER
+
+  """Store Retailers"""
+  RETAILERS_AND_RESELLERS__STORE_RETAILER
+
+  """Sales: Independent Agent"""
+  SALES_INDEPENDENT_AGENT
+
+  """Cleaning, Janitorial Services"""
+  SERVICE_PROVIDER__CLEANING_JANITORIAL_SERVICES
+
+  """Customer Service/Support"""
+  SERVICE_PROVIDER__CUSTOMER_SERVICE_SUPPORT
+
+  """Household Employer"""
+  SERVICE_PROVIDER__DOMESTIC_CAREGIVER_EMPLOYER
+
+  """Fitness"""
+  SERVICE_PROVIDER__FITNESS
+
+  """Office Admin/Support"""
+  SERVICE_PROVIDER__OFFICE_ADMIN_SUPPORT
+
+  """Other Service-based Business"""
+  SERVICE_PROVIDER__OTHER
+
+  """Personal Care"""
+  SERVICE_PROVIDER__PERSONAL_CARE
+
+  """Telemarketing"""
+  SERVICE_PROVIDER__TELEMARKETING
+
+  """Transcription"""
+  SERVICE_PROVIDER__TRANSCRIPTION
+
+  """Transportation, Trucking, Deliver"""
+  TRANSPORTATION_TRUCKING_DELIVERY
+
+  """Designer"""
+  WEB_MEDIA_FREELANCER__DESIGNER
+
+  """Marketing, Social Media"""
+  WEB_MEDIA_FREELANCER__MARKETING_SOCIAL_MEDIA
+
+  """Other Media/Tech"""
+  WEB_MEDIA_FREELANCER__OTHER
+
+  """Programmer"""
+  WEB_MEDIA_FREELANCER__PROGRAMMER
+
+  """SEO"""
+  WEB_MEDIA_FREELANCER__SEO
+
+  """Writer"""
+  WEB_MEDIA_FREELANCER__WRITER
+
+  """Wholesale Distribution and Sales"""
+  WHOLESALE_DISTRIBUTION_SALES
+}
+
+"""Forms of business ownership."""
+enum OrganizationalType {
+  """Corporation"""
+  CORPORATION
+
+  """Partnership"""
+  PARTNERSHIP
+
+  """Sole Proprietorship"""
+  SOLE_PROPRIETORSHIP
+}
+
+"""An object belonging to a `Business` with an `ID`."""
+interface BusinessNode {
+  """ID of the object."""
+  id: ID!
+
+  """Business that the node belongs to."""
+  business: Business!
+}
+
+"""Business edge."""
+type BusinessEdge {
+  """A business."""
+  node: Business
+}
+
+"""Business connection."""
+type BusinessConnection {
+  """List of businesses."""
+  edges: [BusinessEdge!]!
+
+  """Information about pagination."""
+  pageInfo: OffsetPageInfo!
+}
+
+"""Area of focus of a business."""
+type BusinessType {
+  """The description of the business type in human-friendly form."""
+  name: String!
+
+  """The enum value of the business type."""
+  value: BusinessTypeValue!
+}
+
+"""Granular area of focus of a business."""
+type BusinessSubtype {
+  """The description of the business subtype in human-friendly form."""
+  name: String!
+
+  """The enum value of the business subtype."""
+  value: BusinessSubtypeValue!
+}
+
+"""A customer of the business."""
+type Customer implements BusinessNode & Node {
+  """Business that the customer belongs to."""
+  business: Business!
+
+  """Unique identifier for the customer."""
+  id: ID!
+
+  """The primary key used internally at Wave."""
+  internalId: String @deprecated(reason: "Exposed internal IDs will eventually be removed in favor of global ID. Use Node.id instead.")
+
+  """Name or business name of the customer."""
+  name: String!
+
+  """Address of the customer."""
+  address: Address
+
+  """First name of the principal contact."""
+  firstName: String
+
+  """Last name of the principal contact."""
+  lastName: String
+
+  """
+  User defined id for the customer. Commonly referred to as Account Number.
+  """
+  displayId: String
+
+  """Email of the principal contact."""
+  email: String
+
+  """Mobile telephone number of the principal contact."""
+  mobile: String
+
+  """Telephone number of the customer."""
+  phone: String
+
+  """Fax number of the customer."""
+  fax: String
+
+  """Toll-free number of the customer."""
+  tollFree: String
+
+  """Website address of the customer."""
+  website: String
+
+  """Internal notes about the customer."""
+  internalNotes: String
+
+  """Default currency used by the customer."""
+  currency: Currency
+
+  """Details for shipping to the customer."""
+  shippingDetails: CustomerShippingDetails
+
+  """When the customer was created."""
+  createdAt: DateTime!
+
+  """When the customer was last modified."""
+  modifiedAt: DateTime!
+
+  """Whether or not the customer is archived."""
+  isArchived: Boolean
+
+  """
+  Whether or not the customer is active. If false the customer has been deleted
+  """
+  isActive: Boolean
+
+  """Amount due on customer's invoices."""
+  outstandingAmount: Money!
+
+  """Amount due on customer's invoices with due date that have passed."""
+  overdueAmount: Money!
+}
+
+"""
+Product (or service) that a business sells to a customer or purchases from a vendor.
+"""
+type Product implements BusinessNode & Node {
+  """Business that the product belongs to."""
+  business: Business!
+
+  """The income account to associate with this product, set when isSold."""
+  incomeAccount: Account
+
+  """The expense account to associate with this product, set when isBought."""
+  expenseAccount: Account
+
+  """Default sales taxes to apply on product."""
+  defaultSalesTaxes: [SalesTax!]!
+
+  """Unique identifier for the product."""
+  id: ID!
+
+  """The primary key used internally at Wave."""
+  internalId: String @deprecated(reason: "Exposed internal IDs will eventually be removed in favor of global ID. Use Node.id instead.")
+
+  """Name of the product."""
+  name: String!
+
+  """Description of the product."""
+  description: String
+
+  """Price per unit in the major currency unit."""
+  unitPrice: Decimal!
+
+  """
+  Is product sold by the business. Allow this product or service to be added to Invoices.
+  """
+  isSold: Boolean!
+
+  """
+  Is product bought by the business. Allow this product or service to be added to Bills.
+  """
+  isBought: Boolean!
+
+  """Is the product hidden from view by default."""
+  isArchived: Boolean!
+
+  """When the product was created."""
+  createdAt: DateTime!
+
+  """When the product was last modified."""
+  modifiedAt: DateTime!
+}
+
+"""
+A unique record for each type of asset, liability, equity, income and expense. Used as part of a Chart of Accounts.
+"""
+type Account implements BusinessNode & Node {
+  """Business that the account belongs to."""
+  business: Business!
+
+  """Unique identifier for the account."""
+  id: ID!
+
+  """The classic primary key used internally at Wave."""
+  classicId: String
+
+  """Name of the account."""
+  name: String!
+
+  """User defined description for the account."""
+  description: String
+
+  """User defined id for the account."""
+  displayId: String
+
+  """Currency of the account."""
+  currency: Currency!
+
+  """Account type."""
+  type: AccountType!
+
+  """The account subtype classification based on type."""
+  subtype: AccountSubtype!
+
+  """Credit or Debit."""
+  normalBalanceType: AccountNormalBalanceType!
+
+  """Indicates whether the account is hidden from view by default."""
+  isArchived: Boolean!
+
+  """
+  Numerically increasing version, each representing a revision of account data.
+  As soon as something modifies an account, its sequence is incremented.
+  """
+  sequence: Int!
+
+  """The balance of the account as of the current date."""
+  balance: Decimal
+
+  """
+  The balance of the account as of the current date in the business currency.
+  """
+  balanceInBusinessCurrency: Decimal
+}
+
+"""
+An approximate bill given to a buyer indicating the products or services, quantities, and expected prices (not a request for payment). Refers to classic estimates in the old platform.
+"""
+type Estimate implements BusinessNode & Node {
+  """Business that the Estimate belongs to"""
+  business: Business!
+
+  """Unique identifier for the estimate."""
+  id: ID!
+
+  """The primary key used internally at Wave."""
+  internalId: String @deprecated(reason: "Exposed internal IDs will eventually be removed in favor of global ID. Use Node.id instead.")
+}
+
+"""An estimate created in our new platform (queriable via AREstimate)."""
+type NewEstimate implements BusinessNode & Node {
+  """Business that the Estimate belongs to"""
+  business: Business!
+
+  """Unique identifier for the estimate."""
+  id: ID!
+}
+
+"""
+A template that can be used to generate and possibly pay an invoice at regular intervals.
+"""
+type RecurringInvoice implements BusinessNode & Node {
+  """Business that the RecurringInvoice belongs to"""
+  business: Business!
+
+  """Unique identifier for the recurring invoice."""
+  id: ID!
+
+  """The primary key used internally at Wave."""
+  internalId: String @deprecated(reason: "Exposed internal IDs will eventually be removed in favor of global ID. Use Node.id instead.")
+}
+
+"""Record of invoice reminder sent to a customer for an invoice."""
+type InvoiceReminder implements BusinessNode & Node {
+  """Business that the invoice reminder belongs to."""
+  business: Business!
+
+  """Unique identifier for the invoice reminder."""
+  id: ID!
+
+  """The primary key used internally at Wave."""
+  internalId: String @deprecated(reason: "Exposed internal IDs will eventually be removed in favor of global ID. Use Node.id instead.")
+
+  """Days delta."""
+  daysDelta: Int
+
+  """Is sent manualy"""
+  sentManually: Boolean
+
+  """Is sent"""
+  sent: Boolean
+
+  """Issue date."""
+  issueDate: DateTime
+
+  """When the invoiceReminder was created."""
+  createdAt: DateTime
+
+  """When the invoiceReminder was modified."""
+  modifiedAt: DateTime
+
+  """Invoice associated with the invoice reminder."""
+  invoice: Invoice
+}
+
+"""
+Record of invoice payment made for an invoice. Only populated when details of a specific invoice is requested. Does not get populated for a list of invoices.
+"""
+type InvoicePayment implements BusinessNode & Node {
+  """Business that the invoice payment belongs to."""
+  business: Business!
+
+  """The customer of the payment."""
+  customer: Customer
+
+  """
+  Account used to make payments for the Invoice associated with the Invoice Payment.
+  """
+  account: Account!
+
+  """Unique identifier for the invoice payment."""
+  id: ID!
+
+  """
+  Date payment was made for the Invoice associated with the invoice payment.
+  """
+  paymentDate: Date
+
+  """When the payment was created."""
+  createdAt: DateTime!
+
+  """When the payment was last modified."""
+  modifiedAt: DateTime!
+
+  """Invoice Payment memo (notes) text."""
+  memo: String
+
+  """Amount paid for the Invoice associated with the Invoice Payment."""
+  amount: String
+
+  """Exchange rate between invoice currency and business currency."""
+  exchangeRate: Decimal!
+
+  """
+  Method of payment used to make payments for the Invoice associated with the Invoice Payment.
+  """
+  paymentMethod: String
+
+  """
+  Additional details on the payment made for the Invoice associated with the Invoice Payment.
+  """
+  paymentDetails: InvoicePaymentDetail
+
+  """Readonly url for the payment receipt"""
+  readonlyUrl: String
+
+  """Exchange rate to display"""
+  displayExchangeRate: String
+
+  """Payment origin"""
+  origin: String
+
+  """Payment state"""
+  state: String
+
+  """Type of transaction"""
+  transactionType: String
+
+  """Payment provider"""
+  paymentProvider: String
+
+  """Business currency"""
+  businessCurrency: Currency
+
+  """Invoice currency"""
+  invoiceCurrency: Currency
+
+  """Payment currency"""
+  paymentCurrency: Currency
+
+  """Payment method ID"""
+  paymentMethodId: String
+
+  """Active"""
+  active: Boolean
+
+  """Payment platform ID"""
+  transactionId: String
+
+  """Confirmation code"""
+  confirmationCode: String
+
+  """Institution name"""
+  institutionName: String
+
+  """Authorizer name"""
+  authorizerName: String
+
+  """Last 3 digits of the account number"""
+  accountNumberLast3: String
+
+  """Accounting Transaction ID"""
+  accountingTransactionId: String
+
+  """Original Invoice Payment (present when current payment is a refund)"""
+  originInvoicePayment: InvoicePayment
+
+  """Invoice associated with the invoice payment."""
+  invoice: Invoice
+}
+
+"""
+Document issued to a buyer for payment indicating the products or services, quantities, and agreed prices.
+"""
+type Invoice implements BusinessNode & Node {
+  """Business that the invoice belongs to."""
+  business: Business!
+
+  """Customer the invoice is for."""
+  customer: Customer!
+
+  """Invoice payments"""
+  payments: [InvoicePayment]
+
+  """Unique identifier for the invoice."""
+  id: ID!
+
+  """The primary key used internally at Wave."""
+  internalId: String @deprecated(reason: "Exposed internal IDs will eventually be removed in favor of global ID. Use Node.id instead.")
+
+  """When the invoice was created."""
+  createdAt: DateTime!
+
+  """When the invoice was last modified."""
+  modifiedAt: DateTime!
+
+  """Entity that was the precursor to the invoice."""
+  source: InvoiceSource
+
+  """URL to access PDF representation of the invoice."""
+  pdfUrl: String!
+
+  """URL to view the invoice online as seen by a customer."""
+  viewUrl: String!
+
+  """Status of the Invoice."""
+  status: InvoiceStatus!
+
+  """Invoice title at the top of the document."""
+  title: String!
+
+  """Invoice subheading text."""
+  subhead: String
+
+  """Unique number assigned to the invoice."""
+  invoiceNumber: String!
+
+  """Purchase order or sales order number for the invoice."""
+  poNumber: String
+
+  """Date when invoice is issued."""
+  invoiceDate: Date!
+
+  """Date when payment is due."""
+  dueDate: Date!
+
+  """Invoice total less amount already paid."""
+  amountDue: Money!
+
+  """Total of all payments so far made against this invoice."""
+  amountPaid: Money!
+
+  """Total of all sales taxes on all line items within the invoice."""
+  taxTotal: Money!
+
+  """Total value of the invoice including sales taxes."""
+  total: Money!
+
+  """Total value of all discounts."""
+  discountTotal: Money!
+
+  """Invoice discounts."""
+  discounts: [InvoiceDiscount!]
+
+  """Currency of the invoice."""
+  currency: Currency!
+
+  """
+  Exchange rate to business's currency from the invoice's currency. Used to value the invoice income within Wave's accounting transactions.
+  """
+  exchangeRate: Decimal!
+
+  """
+  The line items (product, unit and price) that make up the invoiced sale.
+  """
+  items: [InvoiceItem!]
+
+  """Invoice memo (notes) text."""
+  memo: String
+
+  """Invoice footer text."""
+  footer: String
+
+  """
+  Within a business that is enabled to accept credit card payments, indicates if this individual invoice has been marked to not be payable by card.
+  """
+  disableCreditCardPayments: Boolean!
+
+  """
+  Within a business that is enabled to accept bank payments, indicates if this individual invoice has been marked to not be payable by bank payment.
+  """
+  disableBankPayments: Boolean!
+
+  """
+  Within a business that is enabled to accept credit card payments, indicates if this individual invoice has been marked to not be payable by American Express.
+  """
+  disableAmexPayments: Boolean!
+
+  """The label for the 'Item' column in the line items listing."""
+  itemTitle: String!
+
+  """
+  The label for the 'Unit' column in the listing of line items on the invoice.
+  """
+  unitTitle: String!
+
+  """
+  The label for the 'Price' column in the listing of line items on the invoice.
+  """
+  priceTitle: String!
+
+  """
+  The label for the 'Amount' (= unit x price) column in the listing of line items on the invoice.
+  """
+  amountTitle: String!
+
+  """
+  Indicates whether item's product name in item column is hidden in the line items listing.
+  """
+  hideName: Boolean!
+
+  """
+  Indicates whether item's description in item column is hidden in the line items listing.
+  """
+  hideDescription: Boolean!
+
+  """Indicates whether item's unit is hidden in the line items listing."""
+  hideUnit: Boolean!
+
+  """Indicates whether item's price is hidden in the line items listing."""
+  hidePrice: Boolean!
+
+  """Indicates whether item's amount is hidden in the line items listing."""
+  hideAmount: Boolean!
+
+  """When the invoice was last sent."""
+  lastSentAt: DateTime
+
+  """How the invoice was last sent."""
+  lastSentVia: InvoiceSendMethod
+
+  """When the invoice was last viewed by the customer."""
+  lastViewedAt: DateTime
+
+  """List invoice reminders for an invoice."""
+  invoiceReminders: [InvoiceReminder!]!
+
+  """
+  Indicates whether the customer is required to accept the terms of service.
+  """
+  requireTermsOfServiceAgreement: Boolean!
+
+  """Pretax total."""
+  subtotal: Money!
+
+  """Attachments for the invoice."""
+  attachments: [ARAttachment!]
+
+  """The anonymous identifier for the PublicInvoice"""
+  anonymousId: ID!
+}
+
+"""
+A tax paid to a taxing authority for the sales of certain goods and services.
+"""
+type SalesTax implements BusinessNode & Node {
+  """Business that the sales tax belongs to."""
+  business: Business!
+
+  """The unique identifier for the sales tax."""
+  id: ID!
+
+  """The primary key used internally at Wave."""
+  internalId: String @deprecated(reason: "Exposed internal IDs will eventually be removed in favor of global ID. Use Node.id instead.")
+
+  """Name of the tax."""
+  name: String!
+
+  """A short form or code representing the sales tax."""
+  abbreviation: String!
+
+  """User defined description for the sales tax."""
+  description: String
+
+  """The tax's issued identification number from a taxing authority."""
+  taxNumber: String
+
+  """Display tax number beside the tax name on an invoice."""
+  showTaxNumberOnInvoices: Boolean!
+
+  """
+  Tax rate effective on 'for' date, or current date if no parameter, as a decimal (e.g. 0.15 represents 15%).
+  """
+  rate(for: Date): Decimal!
+
+  """Tax rates with their effective dates of application"""
+  rates: [SalesTaxRate!]!
+
+  """
+  Is a compound tax, or stacked tax. This tax is calculated on top of the subtotal and other tax amounts.
+  """
+  isCompound: Boolean!
+
+  """
+  Is a recoverable tax. It is recoverable if you can deduct the tax that you as a business paid from the tax that you have collected.
+  """
+  isRecoverable: Boolean!
+
+  """Is the sales tax hidden from view by default."""
+  isArchived: Boolean!
+
+  """When the sales tax was created."""
+  createdAt: DateTime!
+
+  """When the sales tax was last modified."""
+  modifiedAt: DateTime!
+}
+
+"""Shipping details related to a customer."""
+type CustomerShippingDetails {
+  """Name or business name of the customer."""
+  name: String
+
+  """Address of the customer."""
+  address: Address
+
+  """Telephone number of the customer."""
+  phone: String
+
+  """Delivery instructions for handling."""
+  instructions: String
+}
+
+"""Customer connection."""
+type CustomerConnection {
+  """List of customers."""
+  edges: [CustomerEdge!]!
+
+  """Information about pagination."""
+  pageInfo: OffsetPageInfo!
+}
+
+"""Customer edge."""
+type CustomerEdge {
+  """A customer."""
+  node: Customer
+}
+
+"""Shipping details related to a customer."""
+input CustomerShippingDetailsInput {
+  """Name or business name of the customer."""
+  name: String
+
+  """Address of the customer."""
+  address: AddressInput
+
+  """Telephone number of the customer."""
+  phone: String
+
+  """Delivery instructions for handling."""
+  instructions: String
+}
+
+"""Shipping details related to a customer."""
+input CustomerPatchShippingDetailsInput {
+  """Name or business name of the customer."""
+  name: String
+
+  """Address of the customer."""
+  address: AddressInput
+
+  """Telephone number of the customer."""
+  phone: String
+
+  """Delivery instructions for handling."""
+  instructions: String
+}
+
+"""Options by which customers can be ordered."""
+enum CustomerSort {
+  """Ascending by creation time."""
+  CREATED_AT_ASC
+
+  """Descending by creation time."""
+  CREATED_AT_DESC
+
+  """Ascending by modified time."""
+  MODIFIED_AT_ASC
+
+  """Descending by modified time."""
+  MODIFIED_AT_DESC
+
+  """Ascending by name."""
+  NAME_ASC
+
+  """Descending by name."""
+  NAME_DESC
+}
+
+"""Input to the `customerCreate` mutation."""
+input CustomerCreateInput {
+  """The unique identifier for the business."""
+  businessId: ID!
+
+  """Name or business name of the customer."""
+  name: String!
+
+  """First name of the principal contact."""
+  firstName: String
+
+  """Last name of the principal contact."""
+  lastName: String
+
+  """Address"""
+  address: AddressInput
+
+  """User defined id for the customer."""
+  displayId: String
+
+  """Email of the principal contact."""
+  email: String
+
+  """Mobile telephone number of the principal contact."""
+  mobile: String
+
+  """Telephone number of the customer."""
+  phone: String
+
+  """Fax number of the customer."""
+  fax: String
+
+  """Toll-free number of the customer."""
+  tollFree: String
+
+  """Website address of the customer."""
+  website: String
+
+  """Internal notes about the customer."""
+  internalNotes: String
+
+  """Default currency used by the customer."""
+  currency: CurrencyCode
+
+  """Details for shipping to the customer."""
+  shippingDetails: CustomerShippingDetailsInput
+}
+
+"""Output of the `customerCreate` mutation."""
+type CustomerCreateOutput {
+  """Customer that was created."""
+  customer: Customer
+
+  """Indicates whether the customer was successfully created."""
+  didSucceed: Boolean!
+
+  """Mutation validation errors."""
+  inputErrors: [InputError!]
+}
+
+"""Input to the `customerPatch` mutation."""
+input CustomerPatchInput {
+  """The unique identifier for the customer."""
+  id: ID!
+
+  """Name or business name of the customer."""
+  name: String
+
+  """First name of the principal contact."""
+  firstName: String
+
+  """Last name of the principal contact."""
+  lastName: String
+
+  """Address"""
+  address: AddressInput
+
+  """User defined id for the customer."""
+  displayId: String
+
+  """Email of the principal contact."""
+  email: String
+
+  """Mobile telephone number of the principal contact."""
+  mobile: String
+
+  """Telephone number of the customer."""
+  phone: String
+
+  """Fax number of the customer."""
+  fax: String
+
+  """Toll-free number of the customer."""
+  tollFree: String
+
+  """Website address of the customer."""
+  website: String
+
+  """Internal notes about the customer."""
+  internalNotes: String
+
+  """Default currency used by the customer."""
+  currency: CurrencyCode
+
+  """Details for shipping to the customer."""
+  shippingDetails: CustomerPatchShippingDetailsInput
+}
+
+"""Output of the `customerPatch` mutation."""
+type CustomerPatchOutput {
+  """Customer that was patched."""
+  customer: Customer
+
+  """Indicates whether the customer was successfully patched."""
+  didSucceed: Boolean!
+
+  """Mutation validation errors."""
+  inputErrors: [InputError!]
+}
+
+"""Input to the `customerDelete` mutation."""
+input CustomerDeleteInput {
+  """The unique identifier for the customer."""
+  id: ID!
+}
+
+"""Output of the `customerDelete` mutation."""
+type CustomerDeleteOutput {
+  """Indicates whether the customer was successfully deleted."""
+  didSucceed: Boolean!
+
+  """Mutation validation errors."""
+  inputErrors: [InputError!]
+}
+
+"""
+An approximate bill given to a buyer indicating the products or services, quantities, and expected prices (not a request for payment).
+"""
+type AREstimate {
+  """Customer the estimate is for."""
+  customer: Customer!
+
+  """Unique identifier for the estimate."""
+  id: ID!
+
+  """When the estimate was created."""
+  createdAt: DateTime!
+
+  """When the estimate was last modified."""
+  modifiedAt: DateTime!
+
+  """URL to access PDF representation of the estimate."""
+  pdfUrl: String!
+
+  """URL to view the estimate online as seen by a customer."""
+  viewUrl: String!
+
+  """Status of the estimate."""
+  status: EstimateStatus!
+
+  """estimate title at the top of the document."""
+  title: String!
+
+  """estimate subheading text."""
+  subhead: String
+
+  """Unique number assigned to the estimate."""
+  estimateNumber: String!
+
+  """Purchase order or sales order number for the estimate."""
+  poNumber: String
+
+  """Date when estimate is issued."""
+  estimateDate: Date!
+
+  """Date when payment is due."""
+  dueDate: Date!
+
+  """estimate total less amount already paid."""
+  amountDue: Money!
+
+  """Total of all payments so far made against this estimate."""
+  amountPaid: Money!
+
+  """Total of all sales taxes on all line items within the estimate."""
+  taxTotal: Money!
+
+  """Total value of the estimate including sales taxes."""
+  total: Money!
+
+  """Total value of all discounts."""
+  discountTotal: Money!
+
+  """estimate discounts."""
+  discounts: [EstimateDiscount!]
+
+  """Attachments for the estimate."""
+  attachments: [ARAttachment!]
+
+  """Acceptance history of the estimate."""
+  history: [AREstimateAcceptanceHistory!]
+
+  """Status of the deposit request."""
+  depositStatus: EstimateDepositStatusType!
+
+  """Unit of the deposit."""
+  depositUnit: EstimateDepositUnitType
+
+  """Unit value of deposit requested."""
+  depositValue: Decimal
+
+  """Total value of all deposits."""
+  depositTotal: Money!
+
+  """Deposit payment status."""
+  depositPaymentStatus: EstimateDepositPaymentStatus!
+
+  """Currency of the estimate."""
+  currency: Currency!
+
+  """
+  Exchange rate to business's currency from the estimate's currency. Used to value the estimate income within Wave's accounting transactions.
+  """
+  exchangeRate: Decimal!
+
+  """
+  The line items (product, unit and price) that make up the estimated sale.
+  """
+  items: [EstimateItem!]
+
+  """estimate memo (notes) text."""
+  memo: String
+
+  """
+  Indicates whether the estimate memo (notes) should not be carried over when the estimate is converted to an invoice.
+  """
+  dontCarryOverNotesToInvoice: Boolean
+
+  """estimate footer text."""
+  footer: String
+
+  """
+  Within a business that is enabled to accept credit card payments, indicates if this individual estimate has been marked to not be payable by card.
+  """
+  disableCreditCardPayments: Boolean!
+
+  """
+  Within a business that is enabled to accept bank payments, indicates if this individual estimate has been marked to not be payable by bank payment.
+  """
+  disableBankPayments: Boolean!
+
+  """
+  Within a business that is enabled to accept credit card payments, indicates if this individual estimate has been marked to not be payable by American Express.
+  """
+  disableAmexPayments: Boolean!
+
+  """The label for the 'Item' column in the line items listing."""
+  itemTitle: String!
+
+  """
+  The label for the 'Unit' column in the listing of line items on the estimate.
+  """
+  unitTitle: String!
+
+  """
+  The label for the 'Price' column in the listing of line items on the estimate.
+  """
+  priceTitle: String!
+
+  """
+  The label for the 'Amount' (= unit x price) column in the listing of line items on the estimate.
+  """
+  amountTitle: String!
+
+  """
+  Indicates whether item's product name in item column is hidden in the line items listing.
+  """
+  hideName: Boolean!
+
+  """
+  Indicates whether item's description in item column is hidden in the line items listing.
+  """
+  hideDescription: Boolean!
+
+  """Indicates whether item's unit is hidden in the line items listing."""
+  hideUnit: Boolean!
+
+  """Indicates whether item's price is hidden in the line items listing."""
+  hidePrice: Boolean!
+
+  """Indicates whether item's amount is hidden in the line items listing."""
+  hideAmount: Boolean!
+
+  """When the estimate was last sent."""
+  lastSentAt: DateTime
+
+  """How the estimate was last sent."""
+  lastSentVia: EstimateSendMethod
+
+  """When the estimate was last viewed by the customer."""
+  lastViewedAt: DateTime
+
+  """
+  Indicates whether the customer is required to accept the terms of service.
+  """
+  requireTermsOfServiceAgreement: Boolean!
+
+  """Pretax total."""
+  subtotal: Money!
+
+  """Estimate payments"""
+  payments: [EstimatePayment]
+}
+
+"""Subtypes of accounts, as used in the Chart of Accounts."""
+enum AccountSubtypeValue {
+  """Cash & Bank"""
+  CASH_AND_BANK
+
+  """Cost of Goods Sold"""
+  COST_OF_GOODS_SOLD
+
+  """Credit Card"""
+  CREDIT_CARD
+
+  """Customer Prepayments and Customer Credits"""
+  CUSTOMER_PREPAYMENTS_AND_CREDITS
+
+  """Depreciation and Amortization"""
+  DEPRECIATION_AND_AMORTIZATION
+
+  """Discount"""
+  DISCOUNTS
+
+  """Due For Payroll"""
+  DUE_FOR_PAYROLL
+
+  """Due to You and Other Business Owners"""
+  DUE_TO_YOU_AND_OTHER_OWNERS
+
+  """Expense"""
+  EXPENSE
+
+  """Gain on Foreign Exchange"""
+  GAIN_ON_FOREIGN_EXCHANGE
+
+  """Income"""
+  INCOME
+
+  """Inventory"""
+  INVENTORY
+
+  """Loan and Line of Credit"""
+  LOANS
+
+  """Loss on Foreign Exchange"""
+  LOSS_ON_FOREIGN_EXCHANGE
+
+  """Money in Transit"""
+  MONEY_IN_TRANSIT
+
+  """Business Owner Contribution"""
+  NON_RETAINED_EARNINGS
+
+  """Other Short-Term Asset"""
+  OTHER_CURRENT_ASSETS
+
+  """Other Short-Term Liability"""
+  OTHER_CURRENT_LIABILITY
+
+  """Other Income"""
+  OTHER_INCOME
+
+  """Other Long-Term Asset"""
+  OTHER_LONG_TERM_ASSETS
+
+  """Other Long-Term Liability"""
+  OTHER_LONG_TERM_LIABILITY
+
+  """Payable"""
+  PAYABLE
+
+  """System Payable Bill"""
+  PAYABLE_BILLS
+
+  """System Payable Non-Bill"""
+  PAYABLE_OTHER
+
+  """Payment Processing Fee"""
+  PAYMENT_PROCESSING_FEES
+
+  """Payroll Expense"""
+  PAYROLL_EXPENSES
+
+  """Property, Plant, Equipment"""
+  PROPERTY_PLANT_EQUIPMENT
+
+  """Receivable"""
+  RECEIVABLE
+
+  """System Receivable Invoice"""
+  RECEIVABLE_INVOICES
+
+  """System Receivable Non-Invoice"""
+  RECEIVABLE_OTHER
+
+  """Retained Earnings: Profit and Business Owner Drawing"""
+  RETAINED_EARNINGS
+
+  """Sales Tax on Sales and Purchases"""
+  SALES_TAX
+
+  """System Customer Credits"""
+  SYSTEM_CUSTOMER_CREDITS
+
+  """Transfers"""
+  TRANSFERS
+
+  """Uncategorized Expense"""
+  UNCATEGORIZED_EXPENSE
+
+  """Uncategorized Income"""
+  UNCATEGORIZED_INCOME
+
+  """Unknown Account"""
+  UNKNOWN_ACCOUNT
+
+  """Vendor Prepayments and Vendor Credits"""
+  VENDOR_PREPAYMENTS_AND_CREDITS
+}
+
+"""Types of accounts, as used in the Chart of Accounts."""
+enum AccountTypeValue {
+  """
+  Represents the different types of economic resources owned or controlled by an entity.
+  """
+  ASSET
+
+  """Represents the residual equity of an entity."""
+  EQUITY
+
+  """Represents the business's expenditures."""
+  EXPENSE
+
+  """Represents the business's earnings."""
+  INCOME
+
+  """Represents the different types of economic obligations of an entity."""
+  LIABILITY
+}
+
+"""
+Subtypes of accounts supported for account creation. Not all subtypes are supported when creating accounts, and this type excludes those that are not supported.
+"""
+enum AccountSubtypeValueCreateInput {
+  """Cash & Bank"""
+  CASH_AND_BANK
+
+  """Cost of Goods Sold"""
+  COST_OF_GOODS_SOLD
+
+  """Credit Card"""
+  CREDIT_CARD
+
+  """Customer Prepayments and Customer Credits"""
+  CUSTOMER_PREPAYMENTS_AND_CREDITS
+
+  """Depreciation and Amortization"""
+  DEPRECIATION_AND_AMORTIZATION
+
+  """Discount"""
+  DISCOUNTS
+
+  """Due For Payroll"""
+  DUE_FOR_PAYROLL
+
+  """Due to You and Other Business Owners"""
+  DUE_TO_YOU_AND_OTHER_OWNERS
+
+  """Expense"""
+  EXPENSE
+
+  """Income"""
+  INCOME
+
+  """Inventory"""
+  INVENTORY
+
+  """Loan and Line of Credit"""
+  LOANS
+
+  """Money in Transit"""
+  MONEY_IN_TRANSIT
+
+  """Business Owner Contribution"""
+  NON_RETAINED_EARNINGS
+
+  """Other Short-Term Asset"""
+  OTHER_CURRENT_ASSETS
+
+  """Other Short-Term Liability"""
+  OTHER_CURRENT_LIABILITY
+
+  """Other Income"""
+  OTHER_INCOME
+
+  """Other Long-Term Asset"""
+  OTHER_LONG_TERM_ASSETS
+
+  """Other Long-Term Liability"""
+  OTHER_LONG_TERM_LIABILITY
+
+  """Payable"""
+  PAYABLE
+
+  """Payment Processing Fee"""
+  PAYMENT_PROCESSING_FEES
+
+  """Payroll Expense"""
+  PAYROLL_EXPENSES
+
+  """Property, Plant, Equipment"""
+  PROPERTY_PLANT_EQUIPMENT
+
+  """Receivable"""
+  RECEIVABLE
+
+  """Retained Earnings: Profit and Business Owner Drawing"""
+  RETAINED_EARNINGS
+
+  """Vendor Prepayments and Vendor Credits"""
+  VENDOR_PREPAYMENTS_AND_CREDITS
+}
+
+"""Account balance type."""
+enum AccountNormalBalanceType {
+  """Credit"""
+  CREDIT
+
+  """Debit"""
+  DEBIT
+}
+
+"""Account type."""
+type AccountType {
+  """Account type name."""
+  name: String!
+
+  """Normal balance type of the account type"""
+  normalBalanceType: AccountNormalBalanceType!
+
+  """Account type value."""
+  value: AccountTypeValue!
+}
+
+"""Account subtype."""
+type AccountSubtype {
+  """Account subtype name."""
+  name: String!
+
+  """Account subtype value."""
+  value: AccountSubtypeValue!
+
+  """Account type for the subtype."""
+  type: AccountType!
+
+  """Indicates if accounts of this subtype can be archived."""
+  archivable: Boolean!
+
+  """Indicates if accounts of this subtype is system created accounts."""
+  systemCreated: Boolean!
+
+  """Account subtype description."""
+  description: String
+}
+
+"""Account edge."""
+type AccountEdge {
+  """An account from the Chart of Accounts."""
+  node: Account
+}
+
+"""Account connection."""
+type AccountConnection {
+  """List of accounts from the Chart of Accounts."""
+  edges: [AccountEdge!]!
+
+  """Information about pagination."""
+  pageInfo: OffsetPageInfo!
+}
+
+"""Rules around how a user is able to modify this account."""
+input AccountCreateRestrictions {
+  """Whether or not a user can archive this account."""
+  canArchive: Boolean
+}
+
+"""Input to the `accountCreate` mutation."""
+input AccountCreateInput {
+  """The unique identifier for the business."""
+  businessId: ID!
+
+  """The account subtype classification."""
+  subtype: AccountSubtypeValueCreateInput!
+
+  """Currency of the account. Will default to business's currency."""
+  currency: CurrencyCode
+
+  """Name of the account."""
+  name: String!
+
+  """User defined description for the account."""
+  description: String
+
+  """User defined id for the account."""
+  displayId: String
+
+  """
+  Rules around how a user is able to modify this account. This field is only usable for specific applications.
+  """
+  restrictions: AccountCreateRestrictions
+}
+
+"""Output of the `accountCreate` mutation."""
+type AccountCreateOutput {
+  """Account that was created."""
+  account: Account
+
+  """Indicates whether the account was successfully created."""
+  didSucceed: Boolean!
+
+  """Mutation validation errors."""
+  inputErrors: [InputError!]
+}
+
+"""Input to the `accountArchive` mutation."""
+input AccountArchiveInput {
+  """The unique identifier for the account."""
+  id: ID!
+}
+
+"""Output of the accountArchive mutation."""
+type AccountArchiveOutput {
+  """Indicates whether the account was successfully archived."""
+  didSucceed: Boolean!
+
+  """Mutation validation errors."""
+  inputErrors: [InputError!]
+}
+
+"""Input to the `accountPatch` mutation."""
+input AccountPatchInput {
+  """The unique identifier for the account."""
+  id: ID!
+
+  """
+  The most recent reversion you are aware of. As soon as something modifies an account, its sequence is incremented.
+  """
+  sequence: Int!
+
+  """Name of the account."""
+  name: String
+
+  """
+  User defined description for the account. Use null to unset the current value.
+  """
+  description: String
+
+  """User defined id for the account. Use null to unset the current value."""
+  displayId: String
+}
+
+"""Output of the accountPatch mutation."""
+type AccountPatchOutput {
+  """Account that was patched."""
+  account: Account
+
+  """Indicates whether the account was successfully patched."""
+  didSucceed: Boolean!
+
+  """Mutation validation errors."""
+  inputErrors: [InputError!]
+}
+
+"""Invoice line item."""
+type InvoiceItem {
+  """Income account."""
+  account: Account!
+
+  """Unique id for item."""
+  id: ID!
+
+  """Detailed description."""
+  description: String
+
+  """Number of units."""
+  quantity: Decimal!
+
+  """Price per unit."""
+  price: Decimal! @deprecated(reason: "Use unitPrice to avoid ambiguity in how the value relates to quantity and the subtotal.")
+
+  """Price per unit in the major currency unit."""
+  unitPrice: Decimal!
+
+  """Pretax total."""
+  subtotal: Money!
+
+  """Total including sales taxes."""
+  total: Money!
+
+  """Taxes."""
+  taxes: [InvoiceItemTax!]!
+
+  """Associated product."""
+  product: Product!
+}
+
+"""Estimate line item."""
+type EstimateItem {
+  """Income account."""
+  account: Account!
+
+  """Associated product."""
+  product: Product!
+
+  """Unique id for item."""
+  id: ID!
+
+  """Detailed description."""
+  description: String
+
+  """Number of units."""
+  quantity: Decimal!
+
+  """Price per unit in the major currency unit."""
+  unitPrice: Decimal!
+
+  """Pretax total."""
+  subtotal: Money!
+
+  """Total including sales taxes."""
+  total: Money!
+
+  """Taxes."""
+  taxes: [EstimateItemTax!]!
+}
+
+"""Sales tax edge."""
+type SalesTaxEdge {
+  """A sales tax."""
+  node: SalesTax
+}
+
+"""Sales tax connection."""
+type SalesTaxConnection {
+  """List of sales taxes."""
+  edges: [SalesTaxEdge!]!
+
+  """Information about pagination."""
+  pageInfo: OffsetPageInfo!
+}
+
+"""Input to the `salesTaxCreate` mutation."""
+input SalesTaxCreateInput {
+  """The unique identifier for the business."""
+  businessId: ID!
+
+  """Name of the tax."""
+  name: String!
+
+  """
+  An short form or code representing the sales tax. Max 10 characters, and MUST BE UNIQUE within business.
+  """
+  abbreviation: String!
+
+  """
+  The current rate, as a decimal (e.g. 0.15 represents 15%; rounded to nearest 6 decimal places with ties going away from zero).
+  """
+  rate: Decimal!
+
+  """User defined description for the sales tax."""
+  description: String
+
+  """The tax's issued identification number from a taxing authority."""
+  taxNumber: String
+
+  """Display tax number beside the tax name on an invoice."""
+  showTaxNumberOnInvoices: Boolean
+
+  """
+  Is a compound tax, or stacked tax. This tax is calculated on top of the subtotal and other tax amounts.
+  """
+  isCompound: Boolean
+
+  """
+  Is a recoverable tax. It is recoverable if you can deduct the tax that you as a business paid from the tax that you have collected.
+  """
+  isRecoverable: Boolean
+}
+
+"""Output of the `salesTaxCreate` mutation."""
+type SalesTaxCreateOutput {
+  """Sales tax that was created."""
+  salesTax: SalesTax
+
+  """Indicates whether the sales tax was successfully created."""
+  didSucceed: Boolean!
+
+  """Mutation validation errors."""
+  inputErrors: [InputError!]
+}
+
+"""Input to the `salesTaxArchive` mutation."""
+input SalesTaxArchiveInput {
+  """The unique identifier for the sales tax."""
+  id: ID!
+}
+
+"""Output of the `salesTaxArchive` mutation."""
+type SalesTaxArchiveOutput {
+  """Sales tax that was archived."""
+  salesTax: SalesTax
+
+  """Indicates whether the sales tax was successfully deleted."""
+  didSucceed: Boolean!
+
+  """Mutation validation errors."""
+  inputErrors: [InputError!]
+}
+
+"""Sales tax rate input for the `salesTaxPatch` mutation"""
+input SalesTaxRateInput {
+  """Date from which the sales tax rate applies."""
+  effective: Date!
+
+  """
+  Tax rate applying from the effective date as a decimal (e.g. 0.15 represents 15%).
+  """
+  rate: Decimal!
+}
+
+"""Input to the `salesTaxPatch` mutation."""
+input SalesTaxPatchInput {
+  """The unique identifier for the sales tax."""
+  id: ID!
+
+  """Name of the tax."""
+  name: String
+
+  """An short form or code representing the sales tax"""
+  abbreviation: String
+
+  """User defined description for the sales tax."""
+  description: String
+
+  """The tax's issued identification number from a taxing authority."""
+  taxNumber: String
+
+  """Display tax number beside the tax name on an invoice."""
+  showTaxNumberOnInvoices: Boolean
+
+  """Tax rate information."""
+  rates: [SalesTaxRateInput!]
+}
+
+"""Output of the `salesTaxPatch` mutation."""
+type SalesTaxPatchOutput {
+  """Sales tax that was patched."""
+  salesTax: SalesTax
+
+  """Indicates whether the sales tax was successfully patched."""
+  didSucceed: Boolean!
+
+  """Mutation validation errors."""
+  inputErrors: [InputError!]
+}
+
+"""
+A Sales Tax rate with effective date. New entry for each change of rate.
+"""
+type SalesTaxRate {
+  """Date from which the sales tax rate applies."""
+  effective: Date!
+
+  """
+  Tax rate applying from the effective date as a decimal (e.g. 0.15 represents 15%).
+  """
+  rate: Decimal!
+}
+
+"""Invoice line item's sales tax."""
+type InvoiceItemTax {
+  """Sales tax."""
+  salesTax: SalesTax!
+
+  """Sales tax amount."""
+  amount: Money
+
+  """Sales tax rate."""
+  rate: Decimal @deprecated(reason: "Use `salesTax.rate`. `rate` will be removed on Oct 20th 2022.")
+}
+
+"""Estimate line item's sales tax."""
+type EstimateItemTax {
+  """Sales tax."""
+  salesTax: SalesTax!
+
+  """Sales tax amount."""
+  amount: Money
+}
+
+"""Invoice payment methods"""
+enum InvoicePaymentMethod {
+  """Bank transfer."""
+  BANK_TRANSFER
+
+  """Cash."""
+  CASH
+
+  """Cheque."""
+  CHEQUE
+
+  """Credit card."""
+  CREDIT_CARD
+
+  """Other."""
+  OTHER
+
+  """Paypal."""
+  PAYPAL
+
+  """Unspecified payment method."""
+  UNSPECIFIED
+}
+
+"""
+Payment Detail for the payment made for an Invoice associated with an invoice payment
+"""
+type InvoicePaymentDetail {
+  """Type of card, such as `Visa`."""
+  cardType: String
+
+  """Last four digits of a card."""
+  lastFour: String
+
+  """Card expiration month"""
+  cardExpiryMonth: String
+
+  """Card expiration year"""
+  cardExpiryYear: String
+
+  """
+  Digital wallets-relevant data like if a payment is made through a digital wallets system (starting with 'ApplePay').
+  """
+  cardSource: String
+}
+
+"""Input of the `invoiceManualPaymentCreate` mutation."""
+input InvoicePaymentCreateManualInput {
+  """The unique identifier for the invoice."""
+  invoiceId: ID!
+
+  """The unique identifier for the payment account."""
+  paymentAccountId: ID!
+
+  """Payment amount."""
+  amount: Decimal!
+
+  """Actual payment date."""
+  paymentDate: Date!
+
+  """Payment method."""
+  paymentMethod: InvoicePaymentMethod!
+
+  """
+  Exchange rate to payment account's currency from the invoice's currency. Only used if the invoice and payment accounts are in different currencies.
+  """
+  exchangeRate: Decimal!
+
+  """Notes."""
+  memo: String
+}
+
+"""Output of the `invoiceManualPaymentCreate` mutation."""
+type InvoicePaymentCreateManualOutput {
+  """Entity that was created."""
+  invoicePayment: InvoicePayment
+
+  """Indicates whether the action was successful."""
+  didSucceed: Boolean!
+
+  """Mutation validation errors."""
+  inputErrors: [InputError!]
+}
+
+"""Input to the `InvoicePaymentReceiptSend` mutation."""
+input InvoicePaymentReceiptSendInput {
+  """The unique identifier for the invoice."""
+  invoiceId: ID!
+
+  """The unique identifier for the invoice payment."""
+  invoicePaymentId: ID!
+
+  """Email addresses to receive an email."""
+  to: [String!]!
+
+  """Message body of the email."""
+  message: String
+
+  """Subject of the email."""
+  subject: String
+
+  """Include a PDF of the invoice as an attachment."""
+  attachPdf: Boolean
+
+  """Email addresses to receive an email."""
+  ccMyself: Boolean
+
+  """The address the email is from."""
+  fromAddress: String
+}
+
+"""Output of the `InvoicePaymentReceiptSend` mutation."""
+type InvoicePaymentReceiptSendOutput {
+  """Indicates whether the invoice was successfully queued for sending."""
+  didSucceed: Boolean!
+
+  """Mutation validation errors."""
+  inputErrors: [InputError!]
+}
+
+"""Input of the `invoicePaymentUpdate` mutation."""
+input InvoicePaymentPatchInput {
+  """The unique identifier for the invoice payment."""
+  id: ID!
+
+  """The unique identifier for the payment account."""
+  paymentAccountId: ID
+
+  """Payment amount."""
+  amount: Decimal
+
+  """Actual payment date."""
+  paymentDate: Date
+
+  """Payment method."""
+  paymentMethod: InvoicePaymentMethod
+
+  """
+  Exchange rate to payment account's currency from the invoice's currency. Only used if the invoice and payment accounts are in different currencies.
+  """
+  exchangeRate: Decimal
+
+  """Notes."""
+  memo: String
+}
+
+"""Output of the `invoicePaymentUpdate` mutation."""
+type InvoicePaymentPatchOutput {
+  """Entity that was created."""
+  invoicePayment: InvoicePayment
+
+  """Indicates whether the action was successful."""
+  didSucceed: Boolean!
+
+  """Mutation validation errors."""
+  inputErrors: [InputError!]
+}
+
+"""Input to the `invoicePaymentDelete` mutation."""
+input InvoicePaymentDeleteInput {
+  """The unique identifier for the invoice payment."""
+  id: ID!
+}
+
+"""Output of the `invoicePaymentDelete` mutation."""
+type InvoicePaymentDeleteOutput {
+  """Indicates whether the action was successful."""
+  didSucceed: Boolean!
+
+  """Mutation validation errors."""
+  inputErrors: [InputError!]
+}
+
+"""Status of an invoice."""
+enum InvoiceStatus {
+  """The invoice is still a draft."""
+  DRAFT
+
+  """The invoice is overdue."""
+  OVERDUE
+
+  """The invoice was overpaid."""
+  OVERPAID
+
+  """The invoice was paid."""
+  PAID
+
+  """The invoice was partially paid."""
+  PARTIAL
+
+  """The invoice was saved."""
+  SAVED
+
+  """The invoice was sent."""
+  SENT
+
+  """The invoice is unpaid."""
+  UNPAID
+
+  """The invoice was viewed."""
+  VIEWED
+}
+
+"""Type of invoice discount."""
+enum InvoiceDiscountType {
+  """Fixed dollar amount discount."""
+  FIXED
+
+  """Type of invoice discount."""
+  PERCENTAGE
+}
+
+"""
+Specifies either the invoice is made from estimate, is recurring, or created manually.
+"""
+union InvoiceSource = Estimate | RecurringInvoice | NewEstimate
+
+"""Status of an invoice."""
+enum InvoiceCreateStatus {
+  """The invoice is still a draft."""
+  DRAFT
+
+  """The invoice was saved."""
+  SAVED
+}
+
+"""Invoice send method."""
+enum InvoiceSendMethod {
+  """Export PDF."""
+  EXPORT_PDF
+
+  """Gmail"""
+  GMAIL
+
+  """Marked as sent."""
+  MARKED_SENT
+
+  """Not sent."""
+  NOT_SENT
+
+  """Outlook."""
+  OUTLOOK
+
+  """Shared link."""
+  SHARED_LINK
+
+  """Skipped."""
+  SKIPPED
+
+  """Wave."""
+  WAVE
+
+  """Yahoo."""
+  YAHOO
+}
+
+"""Invoice connection."""
+type InvoiceConnection {
+  """List of invoices."""
+  edges: [InvoiceEdge!]!
+
+  """Information about pagination."""
+  pageInfo: OffsetPageInfo!
+}
+
+"""Invoice edge."""
+type InvoiceEdge {
+  """An invoice."""
+  node: Invoice!
+}
+
+"""Invoice line item's sales tax."""
+input InvoiceCreateItemTaxInput {
+  """Sales tax."""
+  salesTaxId: ID!
+
+  """
+  *DEPRECATED - DO NOT USE* Sales Tax Amount is calculated by Wave using your Sales Tax settings.
+  """
+  amount: Decimal
+}
+
+"""Invoice line item."""
+input InvoiceCreateItemInput {
+  """Associated product."""
+  productId: ID!
+
+  """Override product's description."""
+  description: String
+
+  """
+  Number of units (rounded to nearest 8 decimal places with ties going away from zero).
+  """
+  quantity: Decimal
+
+  """
+  Override product's unitPrice. Price per unit in the major currency unit (rounded to nearest 8 decimal places with ties going away from zero).
+  """
+  unitPrice: Decimal
+
+  """
+  Taxes. To have the product's default sales taxes applied, provide `undefined` as the value.
+  """
+  taxes: [InvoiceCreateItemTaxInput!]
+}
+
+"""Invoice Discount."""
+input InvoiceDiscountInput {
+  """Discount amount (for FIXED-type discounts)."""
+  amount: Decimal
+
+  """Discount name."""
+  name: String
+
+  """Discount type."""
+  discountType: InvoiceDiscountType!
+
+  """Discount percentage (for PERCENTAGE-type discounts)."""
+  percentage: Decimal
+}
+
+"""Input to the `invoiceCreate` mutation."""
+input InvoiceCreateInput {
+  """The unique identifier for the business."""
+  businessId: ID!
+
+  """The customer identifier to associate with invoice."""
+  customerId: ID!
+
+  """Status of the Invoice."""
+  status: InvoiceCreateStatus = DRAFT
+
+  """
+  Currency of the invoice. If not provided, will use the business's default currency.
+  """
+  currency: CurrencyCode
+
+  """
+  Invoice title at the top of the document. If not provided, will use the business's default invoice title.
+  """
+  title: String
+
+  """
+  Invoice subheading text. If not provided, will use the business's default invoice subheading.
+  """
+  subhead: String
+
+  """
+  Unique number assigned to the invoice. If not provided, will find the current largest invoice number and add 1.
+  """
+  invoiceNumber: String
+
+  """Purchase order or sales order number for the invoice."""
+  poNumber: String
+
+  """Date when invoice is issued. If not provided, will use today's date."""
+  invoiceDate: Date
+
+  """
+  Exchange rate to business's currency from the invoice's currency. Used to value the invoice income within Wave's accounting transactions.
+  """
+  exchangeRate: Decimal
+
+  """
+  Date when payment is due. If not provided, will apply the business's default invoice payment terms to `invoiceDate` value.
+  """
+  dueDate: Date
+
+  """
+  The line items (product, unit and price) that make up the invoiced sale.
+  """
+  items: [InvoiceCreateItemInput!]
+
+  """The discounts applied to the invoice (currently limited to max 1)."""
+  discounts: [InvoiceDiscountInput!]
+
+  """
+  Invoice memo (notes) text. If not provided, will use the business's default invoice memo.
+  """
+  memo: String
+
+  """
+  Invoice footer text. If not provided, will use the business's default invoice footer.
+  """
+  footer: String
+
+  """
+  Within a business that is enabled to accept credit card payments, indicates if this individual invoice has been marked to not be payable by american express payment. If not provided, will use the business's default invoice settings american express payment state.
+  """
+  disableAmexPayments: Boolean
+
+  """
+  Within a business that is enabled to accept credit card payments, indicates if this individual invoice has been marked to not be payable by card. If not provided, will use the business's default invoice credit card payment state.
+  """
+  disableCreditCardPayments: Boolean
+
+  """
+  Within a business that is enabled to accept bank payments, indicates if this individual invoice has been marked to not be payable by bank payment. If not provided, will use the business's default invoice bank payment state.
+  """
+  disableBankPayments: Boolean
+
+  """
+  The label for the 'Item' column in the listing of line items on the invoice. If not provided, will use the business's default invoice column item title.
+  """
+  itemTitle: String
+
+  """
+  The label for the 'Unit' column in the listing of line items on the invoice. If not provided, will use the business's default invoice column unit title.
+  """
+  unitTitle: String
+
+  """
+  The label for the 'Price' column in the listing of line items on the invoice. If not provided, will use the business's default invoice column price title.
+  """
+  priceTitle: String
+
+  """
+  The label for the 'Amount' (= unit x price) column in the listing of line items on the invoice. If not provided, will use the business's default invoice column amount title.
+  """
+  amountTitle: String
+
+  """
+  Indicates whether item's product name in item column is hidden in the line items listing. If not provided, will use the business's default invoice item name visibility.
+  """
+  hideName: Boolean
+
+  """
+  Indicates whether item's description in item column is hidden in the line items listing. If not provided, will use the business's default invoice item description visibility.
+  """
+  hideDescription: Boolean
+
+  """
+  Indicates whether item's unit is hidden in the line items listing. If not provided, will use the business's default invoice item unit visibility.
+  """
+  hideUnit: Boolean
+
+  """
+  Indicates whether item's price is hidden in the line items listing. If not provided, will use the business's default invoice item price visibility.
+  """
+  hidePrice: Boolean
+
+  """
+  Indicates whether item's amount is hidden in the line items listing. If not provided, will use the business's default invoice item amount visibility.
+  """
+  hideAmount: Boolean
+
+  """
+  Indicates whether the customer is required to accept the terms of service.
+  """
+  requireTermsOfServiceAgreement: Boolean
+}
+
+"""Output of the `invoiceCreate` mutation."""
+type InvoiceCreateOutput {
+  """Invoice that was created."""
+  invoice: Invoice
+
+  """Indicates whether the invoice was successfully created."""
+  didSucceed: Boolean!
+
+  """Mutation validation errors."""
+  inputErrors: [InputError!]
+}
+
+"""
+Input to the `invoicePatch` mutation. For each value if it's not provided - do not update it.
+"""
+input InvoicePatchInput {
+  """Unique identifier for the invoice."""
+  id: ID!
+
+  """The customer identifier to associate with invoice."""
+  customerId: ID
+
+  """Status of the Invoice."""
+  status: InvoiceCreateStatus
+
+  """Invoice title at the top of the document."""
+  title: String
+
+  """Invoice subheading text."""
+  subhead: String
+
+  """Date when invoice is issued."""
+  invoiceDate: Date
+
+  """Currency of the invoice."""
+  currency: CurrencyCode
+
+  """
+  Exchange rate to business's currency from the invoice's currency. Used to value the invoice income within Wave's accounting transactions.
+  """
+  exchangeRate: Decimal
+
+  """Date when payment is due."""
+  dueDate: Date
+
+  """
+  The line items (product, unit and price) that make up the invoiced sale. If provided, it would replace all items with given ones.
+  """
+  items: [InvoiceCreateItemInput!]
+
+  """Invoice memo (notes) text."""
+  memo: String
+
+  """Invoice footer text."""
+  footer: String
+
+  """
+  Within a business that is enabled to accept credit card payments, indicates if this individual invoice has been marked to not be payable by american express payment.
+  """
+  disableAmexPayments: Boolean
+
+  """
+  Within a business that is enabled to accept credit card payments, indicates if this individual invoice has been marked to not be payable by card.
+  """
+  disableCreditCardPayments: Boolean
+
+  """
+  Within a business that is enabled to accept bank payments, indicates if this individual invoice has been marked to not be payable by bank payment.
+  """
+  disableBankPayments: Boolean
+
+  """
+  The label for the 'Item' column in the listing of line items on the invoice.
+  """
+  itemTitle: String
+
+  """
+  The label for the 'Unit' column in the listing of line items on the invoice.
+  """
+  unitTitle: String
+
+  """
+  The label for the 'Price' column in the listing of line items on the invoice.
+  """
+  priceTitle: String
+
+  """
+  The label for the 'Amount' (= unit x price) column in the listing of line items on the invoice.
+  """
+  amountTitle: String
+
+  """
+  Indicates whether item's product name in item column is hidden in the line items listing.
+  """
+  hideName: Boolean
+
+  """
+  Indicates whether item's description in item column is hidden in the line items listing.
+  """
+  hideDescription: Boolean
+
+  """Indicates whether item's unit is hidden in the line items listing."""
+  hideUnit: Boolean
+
+  """Indicates whether item's price is hidden in the line items listing."""
+  hidePrice: Boolean
+
+  """Indicates whether item's amount is hidden in the line items listing."""
+  hideAmount: Boolean
+
+  """Purchase order or sales order number for the invoice."""
+  poNumber: String
+
+  """Unique number assigned to the invoice."""
+  invoiceNumber: String
+
+  """The discounts applied to the invoice (currently limited to max 1)."""
+  discounts: [InvoiceDiscountInput!]
+
+  """
+  Indicates whether the customer is required to accept the terms of service.
+  """
+  requireTermsOfServiceAgreement: Boolean
+}
+
+"""Output of the `invoicePatch` mutation."""
+type InvoicePatchOutput {
+  """Invoice that was created."""
+  invoice: Invoice
+
+  """Indicates whether the invoice was successfully created."""
+  didSucceed: Boolean!
+
+  """Mutation validation errors."""
+  inputErrors: [InputError!]
+}
+
+"""Options by which invoices can be ordered."""
+enum InvoiceSort {
+  """Ascending by amount due."""
+  AMOUNT_DUE_ASC
+
+  """Descending by amount due."""
+  AMOUNT_DUE_DESC
+
+  """Ascending by amount paid."""
+  AMOUNT_PAID_ASC
+
+  """Descending by amount paid."""
+  AMOUNT_PAID_DESC
+
+  """Ascending by creation time."""
+  CREATED_AT_ASC
+
+  """Descending by creation time."""
+  CREATED_AT_DESC
+
+  """Ascending by customer's name."""
+  CUSTOMER_NAME_ASC
+
+  """Descending by customer's name."""
+  CUSTOMER_NAME_DESC
+
+  """Ascending by due date."""
+  DUE_AT_ASC
+
+  """Descending by due date."""
+  DUE_AT_DESC
+
+  """Ascending by invoice date."""
+  INVOICE_DATE_ASC
+
+  """Descending by invoice date."""
+  INVOICE_DATE_DESC
+
+  """Ascending by invoice number."""
+  INVOICE_NUMBER_ASC
+
+  """Descending by invoice number."""
+  INVOICE_NUMBER_DESC
+
+  """Ascending by modified date."""
+  MODIFIED_AT_ASC
+
+  """Descending by modified date."""
+  MODIFIED_AT_DESC
+
+  """Ascending by status."""
+  STATUS_ASC
+
+  """Descending by status."""
+  STATUS_DESC
+
+  """Ascending by total amount."""
+  TOTAL_ASC
+
+  """Descending by total amount."""
+  TOTAL_DESC
+}
+
+"""Input to the `invoiceSend` mutation."""
+input InvoiceSendInput {
+  """The unique identifier for the invoice."""
+  invoiceId: ID!
+
+  """Email addresses to receive an email."""
+  to: [String!]!
+
+  """Subject line of the email."""
+  subject: String
+
+  """Message body of the email."""
+  message: String
+
+  """Include a PDF of the invoice as an attachment."""
+  attachPDF: Boolean! = false
+
+  """Email address from"""
+  fromAddress: String
+
+  """Carbon copy email."""
+  ccMyself: Boolean
+}
+
+"""Output of the `invoiceSend` mutation."""
+type InvoiceSendOutput {
+  """Invoice that was sent."""
+  invoice: Invoice
+
+  """Indicates whether the invoice was successfully queued for sending."""
+  didSucceed: Boolean!
+
+  """Mutation validation errors."""
+  inputErrors: [InputError!]
+}
+
+"""Input to the `invoiceDelete` mutation."""
+input InvoiceDeleteInput {
+  """The unique identifier for the invoice."""
+  invoiceId: ID!
+}
+
+"""Output of the `invoiceDelete` mutation."""
+type InvoiceDeleteOutput {
+  """Indicates whether the invoice was successfully deleted."""
+  didSucceed: Boolean!
+
+  """Mutation validation errors."""
+  inputErrors: [InputError!]
+}
+
+"""Input to the `invoiceApprove` mutation."""
+input InvoiceApproveInput {
+  """The unique identifier for the invoice."""
+  invoiceId: ID!
+}
+
+"""Output of the `invoiceApprove` mutation."""
+type InvoiceApproveOutput {
+  """Invoice that was approved."""
+  invoice: Invoice
+
+  """Indicates whether the invoice was successfully approved."""
+  didSucceed: Boolean!
+
+  """Mutation validation errors."""
+  inputErrors: [InputError!]
+}
+
+"""Input to the `invoiceMarkSent` mutation."""
+input InvoiceMarkSentInput {
+  """The unique identifier for the invoice."""
+  invoiceId: ID!
+
+  """How the invoice was sent."""
+  sendMethod: InvoiceSendMethod!
+
+  """When the invoice was sent."""
+  sentAt: DateTime
+}
+
+"""Output of the `invoiceMarkSent` mutation."""
+type InvoiceMarkSentOutput {
+  """Invoice that was marked as sent."""
+  invoice: Invoice
+
+  """Indicates whether the invoice was successfully marked as sent."""
+  didSucceed: Boolean!
+
+  """Mutation validation errors."""
+  inputErrors: [InputError!]
+}
+
+"""Input to the `invoiceClone` mutation."""
+input InvoiceCloneInput {
+  """The unique identifier for the invoice."""
+  invoiceId: ID!
+}
+
+"""Output of the `invoiceClone` mutation."""
+type InvoiceCloneOutput {
+  """Invoice that was cloned."""
+  invoice: Invoice
+
+  """Indicates whether the invoice was successfully cloned."""
+  didSucceed: Boolean!
+
+  """Mutation validation errors."""
+  inputErrors: [InputError!]
+}
+
+"""Common base properties of InvoiceDiscounts."""
+interface InvoiceDiscount {
+  """When the invoice discount was created."""
+  createdAt: DateTime!
+
+  """When the invoice discount was last modified."""
+  modifiedAt: DateTime!
+
+  """A description of the discount."""
+  name: String
+}
+
+"""A fixed discount applied to an Invoice."""
+type FixedInvoiceDiscount implements InvoiceDiscount {
+  """When the invoice discount was created."""
+  createdAt: DateTime!
+
+  """When the invoice discount was last modified."""
+  modifiedAt: DateTime!
+
+  """A description of the discount."""
+  name: String
+
+  """The amount of the discount."""
+  amount: Decimal
+}
+
+"""A percentage discount applied to an Invoice."""
+type PercentageInvoiceDiscount implements InvoiceDiscount {
+  """When the invoice discount was created."""
+  createdAt: DateTime!
+
+  """When the invoice discount was last modified."""
+  modifiedAt: DateTime!
+
+  """A description of the discount."""
+  name: String
+
+  """The percentage of the discount."""
+  percentage: Decimal
+}
+
+"""Represents the direction of a transaction."""
+enum TransactionDirection {
+  """To put in."""
+  DEPOSIT
+
+  """To remove from."""
+  WITHDRAWAL
+}
+
+"""Shipping details related to a vendor."""
+type VendorShippingDetails {
+  """Name or business name of the vendor."""
+  name: String
+
+  """Address of the vendor."""
+  address: Address
+
+  """Telephone number of the vendor."""
+  phone: String
+
+  """Delivery instructions for handling."""
+  instructions: String
+}
+
+"""A vendor of the business."""
+type Vendor implements BusinessNode & Node {
+  """Unique identifier for the customer."""
+  id: ID!
+
+  """Business that the vendor belongs to."""
+  business: Business!
+
+  """Name or business name of the vendor."""
+  name: String!
+
+  """The address of the vendor."""
+  address: Address
+
+  """The first name of the principal contact."""
+  firstName: String
+
+  """The last name of the principal contact."""
+  lastName: String
+
+  """
+  User defined id for the vendor. Commonly referred to as Account Number.
+  """
+  displayId: String
+
+  """Email of the principal vendor."""
+  email: String
+
+  """The mobile number of the vendor."""
+  mobile: String
+
+  """The phone number of the vendor."""
+  phone: String
+
+  """Fax number of the vendor."""
+  fax: String
+
+  """Toll-free number of the vendor."""
+  tollFree: String
+
+  """Website address of the vendor."""
+  website: String
+
+  """Internal notes about the vendor."""
+  internalNotes: String
+
+  """Default currency used by the vendor."""
+  currency: Currency
+
+  """Details for shipping to the vendor."""
+  shippingDetails: VendorShippingDetails
+
+  """When the vendor was created."""
+  createdAt: DateTime!
+
+  """When the vendor was last modified."""
+  modifiedAt: DateTime!
+
+  """Whether or not the vendor is archived."""
+  isArchived: Boolean
+}
+
+"""Vendor connection."""
+type VendorConnection {
+  """List of vendors."""
+  edges: [VendorEdge!]!
+
+  """Information about pagination."""
+  pageInfo: OffsetPageInfo!
+}
+
+"""Vendor edge."""
+type VendorEdge {
+  """A vendor."""
+  node: Vendor!
+}
+
+"""Business invoice and estimates settings information."""
+type InvoiceEstimateSettings {
+  """Settings applied to both invoices and estimates."""
+  generalSettings: GeneralSettings!
+}
+
+"""General settings on an invoice and estimate."""
+type GeneralSettings {
+  """Color to represent the brand of the business."""
+  accentColor: HexColorCode
+
+  """Logo of the business."""
+  logoUrl: URL
+}
+
+"""Product connection."""
+type ProductConnection {
+  """List of products."""
+  edges: [ProductEdge!]!
+
+  """Information about pagination."""
+  pageInfo: OffsetPageInfo!
+}
+
+"""Product edge."""
+type ProductEdge {
+  """A product."""
+  node: Product!
+}
+
+"""Input to the `productArchive` mutation."""
+input ProductArchiveInput {
+  """The unique identifier for the product."""
+  id: ID!
+}
+
+"""Output of the `productArchive` mutation."""
+type ProductArchiveOutput {
+  """Product that was archived."""
+  product: Product
+
+  """Indicates whether the product was successfully deleted."""
+  didSucceed: Boolean!
+
+  """Mutation validation errors."""
+  inputErrors: [InputError!]
+}
+
+"""Input to the `productCreate` mutation."""
+input ProductCreateInput {
+  """The unique identifier for the business."""
+  businessId: ID!
+
+  """Name of the product."""
+  name: String!
+
+  """
+  Price per unit in the major currency unit (rounded to nearest 5 decimal places with ties going away from zero).
+  """
+  unitPrice: Decimal!
+
+  """Product description."""
+  description: String
+
+  """Default sales taxes to apply on product."""
+  defaultSalesTaxIds: [ID!]
+
+  """
+  Income account to associate with this product. Account must be one of subtypes: `INCOME`, `DISCOUNTS`, `OTHER_INCOME`.
+  """
+  incomeAccountId: ID
+
+  """
+  Expense account to associate with this product. Account must be one of subtypes: `EXPENSE`, `COST_OF_GOODS_SOLD`, `PAYMENT_PROCESSING_FEES`, `PAYROLL_EXPENSES`.
+  """
+  expenseAccountId: ID
+}
+
+"""Output of the `productCreate` mutation."""
+type ProductCreateOutput {
+  """Product that was created."""
+  product: Product
+
+  """Indicates whether the product was successfully created."""
+  didSucceed: Boolean!
+
+  """Mutation validation errors."""
+  inputErrors: [InputError!]
+}
+
+"""Input to the `productPatch` mutation."""
+input ProductPatchInput {
+  """The unique identifier for the product."""
+  id: ID!
+
+  """Name of the product."""
+  name: String
+
+  """Description of the product."""
+  description: String
+
+  """
+  Price per unit in the major currency unit (rounded to nearest 5 decimal places with ties going away from zero).
+  """
+  unitPrice: Decimal
+
+  """Default sales taxes to apply on product."""
+  defaultSalesTaxIds: [ID!]
+
+  """
+  Income account to associate with this product. Account must be one of subtypes: `INCOME`, `DISCOUNTS`, `OTHER_INCOME`.
+  """
+  incomeAccountId: ID
+
+  """
+  Expense account to associate with this product. Account must be one of subtypes: `EXPENSE`, `COST_OF_GOODS_SOLD`, `PAYMENT_PROCESSING_FEES`, `PAYROLL_EXPENSES`.
+  """
+  expenseAccountId: ID
+}
+
+"""Output of the `productPatch` mutation."""
+type ProductPatchOutput {
+  """Product that was updated."""
+  product: Product
+
+  """Indicates whether the product was successfully patched."""
+  didSucceed: Boolean!
+
+  """Mutation validation errors."""
+  inputErrors: [InputError!]
+}
+
+"""Options by which products can be ordered."""
+enum ProductSort {
+  """Ascending by creation time."""
+  CREATED_AT_ASC
+
+  """Descending by creation time."""
+  CREATED_AT_DESC
+
+  """Ascending by modified time."""
+  MODIFIED_AT_ASC
+
+  """Descending by modified time."""
+  MODIFIED_AT_DESC
+
+  """Ascending by name."""
+  NAME_ASC
+
+  """Descending by name."""
+  NAME_DESC
+}
+
+"""Represents the origin of a transaction."""
+enum TransactionOrigin {
+  """Manually created transaction."""
+  MANUAL
+
+  """Transaction created through Zapier."""
+  ZAPIER
+}
+
+"""Input of the moneyDepositTransactionCreate Mutation"""
+input MoneyDepositTransactionCreateInput {
+  """Id of the business."""
+  businessId: ID!
+
+  """Date of the transaction."""
+  date: Date!
+
+  """Description for the transaction."""
+  description: String!
+
+  """Deposit account and amount."""
+  deposit: MoneyDepositTransactionCreateDepositInput!
+
+  """Line items."""
+  lineItems: [MoneyDepositTransactionCreateLineItemInput!]!
+
+  """Fees."""
+  fees: [MoneyDepositTransactionCreateFeeInput!]
+
+  """Origin of the transaction."""
+  origin: TransactionOrigin!
+
+  """ID of the transaction in an external system."""
+  externalId: String
+
+  """Transaction timestamp."""
+  createdAt: DateTime
+
+  """Extra notes about the transaction."""
+  notes: String
+}
+
+"""Output of the moneyDepositTransactionCreate Mutation"""
+type MoneyDepositTransactionCreateOutput {
+  """Whether or not the transaction was successfully created."""
+  didSucceed: Boolean!
+
+  """Mutation validation errors."""
+  inputErrors: [InputError!]
+}
+
+"""Input representing a deposit."""
+input MoneyDepositTransactionCreateDepositInput {
+  """Id of the account."""
+  accountId: ID!
+
+  """Date of the transaction."""
+  amount: Float!
+}
+
+"""Sales tax input."""
+input TransactionCreateSalesTaxInput {
+  """Tax Abbreviation."""
+  abbreviation: String!
+
+  """Tax Amount."""
+  amount: Float!
+}
+
+"""Line item input."""
+input MoneyDepositTransactionCreateLineItemInput {
+  """ID of the account associated with the line item."""
+  accountId: ID!
+
+  """Amount."""
+  amount: Float!
+
+  """ID of the customer associated with the line item."""
+  customerId: ID
+
+  """Taxes applied to the line item."""
+  taxes: [TransactionCreateSalesTaxInput!]!
+}
+
+"""Fee input."""
+input MoneyDepositTransactionCreateFeeInput {
+  """ID of the account associated with the fee."""
+  accountId: ID!
+
+  """Amount."""
+  amount: Float!
+}
+
+"""Input of the `moneyTransactionCreate` Mutation"""
+input MoneyTransactionCreateInput {
+  """The unique identifier for the business."""
+  businessId: ID!
+
+  """
+  ID of the transaction in an external system. If you don't have one, generate a UUID and provide it.
+  """
+  externalId: String!
+
+  """Date of the transaction."""
+  date: Date!
+
+  """Description for the transaction."""
+  description: String!
+
+  """Extra notes about the transaction."""
+  notes: String
+
+  """Anchor item."""
+  anchor: MoneyTransactionCreateAnchorInput!
+
+  """Line items."""
+  lineItems: [MoneyTransactionCreateLineItemInput!]!
+}
+
+"""An created transaction."""
+type Transaction {
+  """Unique identifier for the transaction."""
+  id: ID!
+}
+
+"""Output of the `moneyTransactionCreate` Mutation"""
+type MoneyTransactionCreateOutput {
+  """Created transaction."""
+  transaction: Transaction
+
+  """Whether or not the transaction was successfully created."""
+  didSucceed: Boolean!
+
+  """Mutation validation errors."""
+  inputErrors: [InputError!]
+}
+
+"""Input of the `moneyTransactionsCreate` Mutation"""
+input MoneyTransactionsCreateInput {
+  """The unique identifier for the business."""
+  businessId: ID!
+
+  """Array of transactions to create."""
+  transactions: [MoneyTransactionDetails!]!
+}
+
+"""Input for creating a money transaction."""
+input MoneyTransactionDetails {
+  """
+  ID of the transaction in an external system. If you don't have one, generate a UUID and provide it.
+  """
+  externalId: String!
+
+  """Date of the transaction."""
+  date: Date!
+
+  """Description for the transaction."""
+  description: String!
+
+  """Extra notes about the transaction."""
+  notes: String
+
+  """Anchor item."""
+  anchor: MoneyTransactionCreateAnchorInput!
+
+  """Line items."""
+  lineItems: [MoneyTransactionCreateLineItemInput!]!
+}
+
+"""Output of the `moneyTransactionsCreate` Mutation"""
+type MoneyTransactionsCreateOutput {
+  """Created transactions."""
+  transactions: [Transaction]
+
+  """Whether or not all transactions were successfully created."""
+  didSucceed: Boolean!
+
+  """Mutation validation errors."""
+  inputErrors: [InputError!]
+}
+
+"""Balance type that expresses how to change an account."""
+enum BalanceType {
+  """Credit."""
+  CREDIT
+
+  """Debit."""
+  DEBIT
+
+  """
+  Decrease using the inverse of the account's normal balance type. For contra accounts whose subtype is `DISCOUNTS` or `DEPRECIATION_AND_AMORTIZATION`, apply the amount in the account's normal balance type.
+  """
+  DECREASE
+
+  """
+  Increase using the account's normal balance type. For contra accounts whose subtype is `DISCOUNTS` or `DEPRECIATION_AND_AMORTIZATION`, apply the amount in the inverse of the account's normal balance type.
+  """
+  INCREASE
+}
+
+"""Anchor input."""
+input MoneyTransactionCreateAnchorInput {
+  """ID of the anchor account."""
+  accountId: ID!
+
+  """Amount of the transaction (unsigned)."""
+  amount: Decimal!
+
+  """Direction of a transaction"""
+  direction: TransactionDirection!
+}
+
+"""Line item input."""
+input MoneyTransactionCreateLineItemInput {
+  """ID of the account associated with the line item."""
+  accountId: ID!
+
+  """Amount of the line item (unsigned)."""
+  amount: Decimal!
+
+  """How the account should change in relation to the amount."""
+  balance: BalanceType! = INCREASE
+
+  """ID of the customer associated with the line item."""
+  customerId: ID
+
+  """Optional description for line item."""
+  description: String
+
+  """Taxes applied to the line item."""
+  taxes: [MoneyTransactionCreateSalesTaxInput!]
+}
+
+"""Sales tax input."""
+input MoneyTransactionCreateSalesTaxInput {
+  """ID of the sales tax."""
+  salesTaxId: ID!
+
+  """Override the amount of the tax (unsigned)."""
+  amount: Decimal!
+}
+
+"""Common base properties of EstimateDiscounts."""
+interface EstimateDiscount {
+  """When the estimate discount was created."""
+  createdAt: DateTime!
+
+  """When the estimate discount was last modified."""
+  modifiedAt: DateTime!
+
+  """A description of the discount."""
+  name: String
+}
+
+"""A fixed discount applied to an estimate."""
+type FixedEstimateDiscount implements EstimateDiscount {
+  """When the estimate discount was created."""
+  createdAt: DateTime!
+
+  """When the estimate discount was last modified."""
+  modifiedAt: DateTime!
+
+  """A description of the discount."""
+  name: String
+
+  """The amount of the discount."""
+  amount: Decimal
+}
+
+"""A percentage discount applied to an estimate."""
+type PercentageEstimateDiscount implements EstimateDiscount {
+  """When the estimate discount was created."""
+  createdAt: DateTime!
+
+  """When the estimate discount was last modified."""
+  modifiedAt: DateTime!
+
+  """A description of the discount."""
+  name: String
+
+  """The percentage of the discount."""
+  percentage: Decimal
+}
+
+"""Status of an estimate."""
+enum EstimateStatus {
+  """The estimate was accepted."""
+  ACCEPTED
+
+  """The estimate was approved."""
+  APPROVED
+
+  """The estimate was converted."""
+  CONVERTED
+
+  """The estimate was deleted."""
+  DELETED
+
+  """The estimate is still a draft."""
+  DRAFT
+
+  """The estimate was expired."""
+  EXPIRED
+
+  """The estimate was rejected."""
+  REJECTED
+
+  """The estimate was sent."""
+  SENT
+
+  """The estimate was viewed."""
+  VIEWED
+}
+
+"""Type of estimate discount."""
+enum EstimateDiscountType {
+  """Fixed dollar amount discount."""
+  FIXED
+
+  """Percentage discount."""
+  PERCENTAGE
+}
+
+"""Deposit unit type."""
+enum EstimateDepositUnitType {
+  """Estimate deposit value is an amount in cents."""
+  AMOUNT
+
+  """Estimate deposit value is a percentage."""
+  PERCENTAGE
+}
+
+"""Deposit acceptance status type."""
+enum EstimateDepositStatusType {
+  """Estimate deposit disabled."""
+  DISABLED
+
+  """Estimate deposit is mandatory."""
+  ENABLED_MANDATORY
+
+  """Estimate deposit can be accepted but is not mandatory."""
+  ENABLED_OPTIONAL
+}
+
+"""Estimate history entity types"""
+enum EstimateHistoryEntityType {
+  """BUSINESS OWNER"""
+  BUSINESS_OWNER
+
+  """CUSTOMER"""
+  CUSTOMER
+}
+
+"""Estimate deposit unit entity types"""
+enum EstimateDepositPaymentStatus {
+  """PAID_FULL"""
+  PAID_FULL
+
+  """PAID_PARTIAL"""
+  PAID_PARTIAL
+
+  """UNPAID"""
+  UNPAID
+}
+
+"""Acceptance history record for estimate"""
+type AREstimateAcceptanceHistory {
+  """Id of the entity"""
+  entityId: String!
+
+  """Type of the entity"""
+  entityType: EstimateHistoryEntityType!
+
+  """State of the history record"""
+  state: String!
+
+  """Name of the entity"""
+  name: String!
+
+  """Email associated to the entity"""
+  email: String!
+
+  """Timestamp of the history record"""
+  timestamp: DateTime!
+}
+
+"""Estimate send method."""
+enum EstimateSendMethod {
+  """Export PDF."""
+  EXPORT_PDF
+
+  """Gmail"""
+  GMAIL
+
+  """Marked as sent."""
+  MARKED_SENT
+
+  """Not sent."""
+  NOT_SENT
+
+  """Outlook."""
+  OUTLOOK
+
+  """Shared link."""
+  SHARED_LINK
+
+  """Skipped."""
+  SKIPPED
+
+  """Wave."""
+  WAVE
+
+  """Yahoo."""
+  YAHOO
+}
+
+"""Status of an estimate that is allowed for creation"""
+enum EstimateCreateStatus {
+  """The estimate is still a draft."""
+  DRAFT
+}
+
+"""Estimate line item's sales tax."""
+input EstimateCreateItemTaxInput {
+  """Sales tax."""
+  salesTaxId: ID!
+}
+
+"""Estimate line item."""
+input EstimateCreateItemInput {
+  """Associated product."""
+  productId: ID!
+
+  """
+  *DEPRECATED - DO NOT USE* - Income account gets set in the backend based on the provided product id - manually setting this value may result in unexpected behavior.
+  """
+  incomeAccountClassicId: String @deprecated(reason: "Income account gets set in the backend based on the provided product id - manually setting this value may result in unexpected behavior.")
+
+  """Product's name."""
+  name: String
+
+  """Override product's description."""
+  description: String
+
+  """
+  Number of units (rounded to nearest 8 decimal places with ties going away from zero).
+  """
+  quantity: Decimal
+
+  """
+  Override product's unitPrice. Price per unit in the major currency unit (rounded to nearest 8 decimal places with ties going away from zero).
+  """
+  unitPrice: Decimal!
+
+  """
+  Taxes. To have the product's default sales taxes applied, provide `undefined` as the value.
+  """
+  taxes: [EstimateCreateItemTaxInput!]
+}
+
+"""Estimate Discount."""
+input EstimateCreateDiscountInput {
+  """Discount amount (for FIXED-type discounts)."""
+  amount: Decimal
+
+  """Discount name."""
+  name: String
+
+  """Discount type."""
+  discountType: EstimateDiscountType!
+
+  """Discount percentage (for PERCENTAGE-type discounts)."""
+  percentage: Decimal
+}
+
+"""Input to the `estimateCreate` mutation."""
+input EstimateCreateInput {
+  """The unique identifier for the business."""
+  businessId: ID!
+
+  """The customer identifier to associate with estimate."""
+  customerId: ID!
+
+  """Status of the estimate"""
+  status: EstimateCreateStatus = DRAFT
+
+  """
+  Currency of the estimate. If not provided, will use the business's default currency.
+  """
+  currency: CurrencyCode
+
+  """
+  Estimate title at the top of the document. If not provided, will use the business's default estimate title.
+  """
+  title: String
+
+  """
+  Estimate subheading text. If not provided, will use the business's default estimate subheading.
+  """
+  subhead: String
+
+  """
+  Unique number assigned to the estimate. If not provided, one will be system generated.
+  """
+  estimateNumber: String
+
+  """Purchase order or sales order number for the estimate."""
+  poNumber: String
+
+  """Date when estimate is issued. If not provided, will use today's date"""
+  estimateDate: Date
+
+  """
+  Date when payment is due. If not provided, will apply the business's default estimate payment terms to `estimateDate` value.
+  """
+  dueDate: Date
+
+  """
+  Exchange rate to business's currency from the estimate's currency. Used to value the estimate income within Wave's accounting transactions.
+  """
+  exchangeRate: Decimal
+
+  """
+  The line items (product, unit and price) that make up the estimated sale.
+  """
+  items: [EstimateCreateItemInput!]
+
+  """The discounts applied to estimate."""
+  discounts: [EstimateCreateDiscountInput!]
+
+  """List of attachment ids to be associated with the estimate."""
+  attachmentIds: [String!]
+
+  """
+  Estimate memo (notes) text. If not provided, will use the business's default estimate memo.
+  """
+  memo: String
+
+  """
+  Estimate footer text. If not provided, will use the business's default estimate footer.
+  """
+  footer: String
+
+  """
+  Within a business that is enabled to accept credit card payments, indicates if this individual estimate has been marked to not be payable by american express payment. If not provided, will use the business's default estimate settings american express payment state.
+  """
+  disableAmexPayments: Boolean
+
+  """
+  Within a business that is enabled to accept credit card payments, indicates if this individual estiamte has been marked to not be payable by card. If not provided, will use the business's default estimate credit card payment state.
+  """
+  disableCreditCardPayments: Boolean
+
+  """
+  Within a business that is enabled to accept bank payments, indicates if this individual estimate has been marked to not be payable by bank payment. If not provided, will use the business's default estimate bank payment state.
+  """
+  disableBankPayments: Boolean
+
+  """
+  The label for the 'Item' column in the listing of line items on the estimate. If not provided, will use the business's default estimate column item title.
+  """
+  itemTitle: String
+
+  """
+  The label for the 'Unit' column in the listing of line items on the estimate. If not provided, will use the business's default estimate column unit title.
+  """
+  unitTitle: String
+
+  """
+  The label for the 'Price' column in the listing of line items on the estimate. If not provided, will use the business's default estimate column price title.
+  """
+  priceTitle: String
+
+  """
+  The label for the 'Amount' (= unit x price) column in the listing of line items on the estimate. If not provided, will use the business's default estimate column amount title.
+  """
+  amountTitle: String
+
+  """
+  Indicates whether item's product name in item column is hidden in the line items listing. If not provided, will use the business's default estimate item name visibility.
+  """
+  hideName: Boolean
+
+  """
+  Indicates whether item's description in item column is hidden in the line items listing. If not provided, will use the business's default estimate item description visibility.
+  """
+  hideDescription: Boolean
+
+  """
+  Indicates whether item's unit is hidden in the line items listing. If not provided, will use the business's default estimate item unit visibility.
+  """
+  hideUnit: Boolean
+
+  """
+  Indicates whether item's price is hidden in the line items listing. If not provided, will use the business's default estimate item price visibility.
+  """
+  hidePrice: Boolean
+
+  """
+  Indicates whether item's amount is hidden in the line items listing. If not provided, will use the business's default estimate item amount visibility.
+  """
+  hideAmount: Boolean
+
+  """
+  Indicates whether the customer is required to accept the terms of service.
+  """
+  requireTermsOfServiceAgreement: Boolean
+
+  """Indicates whether the deposits can be accepted on the estimate"""
+  depositStatus: EstimateDepositStatusType
+
+  """
+  Indicates the value of the deposit either amount in cents or percentage
+  """
+  depositValue: Decimal
+
+  """Indicates the unit of the deposit value"""
+  depositUnit: EstimateDepositUnitType
+
+  """
+  Indicates whether the estimate memo (notes) should not be carried over when the estimate is converted to an invoice.
+  """
+  dontCarryOverNotesToInvoice: Boolean
+}
+
+"""Output of the `estimateCreate` mutation."""
+type EstimateCreateOutput {
+  """Estimate that was created."""
+  estimate: AREstimate
+
+  """Indicates whether the estimate was successfully created."""
+  didSucceed: Boolean!
+
+  """Mutation validation errors."""
+  inputErrors: [InputError!]
+}
+
+"""Input to the `estimateApprove` mutation."""
+input EstimateApproveInput {
+  """The unique identifier for the estimate."""
+  estimateId: ID!
+}
+
+"""Output of the `estimateApprove` mutation."""
+type EstimateApproveOutput {
+  """Estimate that was approved."""
+  estimate: AREstimate
+
+  """Indicates whether the estimate was successfully approved."""
+  didSucceed: Boolean!
+
+  """Mutation validation errors."""
+  inputErrors: [InputError!]
+}
+
+"""Input to the `estimateDelete` mutation."""
+input EstimateDeleteInput {
+  """The unique identifier for the estimate."""
+  estimateId: ID!
+}
+
+"""Output of the `estimateDelete` mutation."""
+type EstimateDeleteOutput {
+  """Indicates whether the estimate was successfully deleted."""
+  didSucceed: Boolean!
+
+  """Mutation validation errors."""
+  inputErrors: [InputError!]
+}
+
+"""
+Input to the `estimatePatch` mutation. For each value if it's not provided - do not update it.
+"""
+input EstimatePatchInput {
+  """Unique identifier for the estimate."""
+  id: ID!
+
+  """The customer identifier to associate with estimate."""
+  customerId: ID!
+
+  """Status of the Estimate."""
+  status: EstimateStatus!
+
+  """Estimate title at the top of the document."""
+  title: String!
+
+  """Estimate subheading text."""
+  subhead: String
+
+  """Date when estimate is issued."""
+  estimateDate: Date!
+
+  """Currency of the estimate."""
+  currency: CurrencyCode!
+
+  """
+  Exchange rate to business's currency from the estimate's currency. Used to value the estimate income within Wave's accounting transactions.
+  """
+  exchangeRate: Decimal!
+
+  """Date when payment is due."""
+  dueDate: Date!
+
+  """
+  The line items (product, unit and price) that make up the estimated sale. If provided, it would replace all items with given ones.
+  """
+  items: [EstimateCreateItemInput!]
+
+  """Estimate memo (notes) text."""
+  memo: String
+
+  """Estimate footer text."""
+  footer: String
+
+  """
+  Within a business that is enabled to accept credit card payments, indicates if this individual estimate has been marked to not be payable by american express payment.
+  """
+  disableAmexPayments: Boolean
+
+  """
+  Within a business that is enabled to accept credit card payments, indicates if this individual estimate has been marked to not be payable by card.
+  """
+  disableCreditCardPayments: Boolean
+
+  """
+  Within a business that is enabled to accept bank payments, indicates if this individual estimate has been marked to not be payable by bank payment.
+  """
+  disableBankPayments: Boolean
+
+  """
+  The label for the 'Item' column in the listing of line items on the estimate.
+  """
+  itemTitle: String
+
+  """
+  The label for the 'Unit' column in the listing of line items on the estimate.
+  """
+  unitTitle: String
+
+  """
+  The label for the 'Price' column in the listing of line items on the estimate.
+  """
+  priceTitle: String
+
+  """
+  The label for the 'Amount' (= unit x price) column in the listing of line items on the estimate.
+  """
+  amountTitle: String
+
+  """
+  Indicates whether item's product name in item column is hidden in the line items listing.
+  """
+  hideName: Boolean
+
+  """
+  Indicates whether item's description in item column is hidden in the line items listing.
+  """
+  hideDescription: Boolean
+
+  """Indicates whether item's unit is hidden in the line items listing."""
+  hideUnit: Boolean
+
+  """Indicates whether item's price is hidden in the line items listing."""
+  hidePrice: Boolean
+
+  """Indicates whether item's amount is hidden in the line items listing."""
+  hideAmount: Boolean
+
+  """Purchase order or sales order number for the estimate."""
+  poNumber: String
+
+  """Unique number assigned to the estimate."""
+  estimateNumber: String
+
+  """The discounts applied to the estimate (currently limited to max 1)."""
+  discounts: [EstimateCreateDiscountInput!]
+
+  """List of attachment ids to be associated with the estimate."""
+  attachmentIds: [String!]
+
+  """
+  Indicates whether the customer is required to accept the terms of service.
+  """
+  requireTermsOfServiceAgreement: Boolean
+
+  """Indicates whether the deposits can be accepted on the estimate"""
+  depositStatus: EstimateDepositStatusType
+
+  """
+  Indicates the value of the deposit either amount in cents or percentage
+  """
+  depositValue: Decimal
+
+  """Indicates the unit of the deposit value"""
+  depositUnit: EstimateDepositUnitType
+
+  """
+  Indicates whether the estimate memo (notes) should not be carried over when the estimate is converted to an invoice.
+  """
+  dontCarryOverNotesToInvoice: Boolean
+}
+
+"""Output of the `estimatePatch` mutation."""
+type EstimatePatchOutput {
+  """Estimate that was updated."""
+  estimate: AREstimate
+
+  """Indicates whether the estimate was successfully updated."""
+  didSucceed: Boolean!
+
+  """Mutation validation errors."""
+  inputErrors: [InputError!]
+}
+
+"""Input to the `estimateClone` mutation."""
+input EstimateCloneInput {
+  """The unique identifier for the estimate."""
+  estimateId: ID!
+}
+
+"""Output of the `estimateClone` mutation."""
+type EstimateCloneOutput {
+  """Estimate that was cloned."""
+  estimate: AREstimate
+
+  """Indicates whether the estimate was successfully deleted."""
+  didSucceed: Boolean!
+
+  """Mutation validation errors."""
+  inputErrors: [InputError!]
+}
+
+"""Input to the `convertEstimateToInvoice` mutation."""
+input ConvertEstimateToInvoiceInput {
+  """The unique identifier for the estimate."""
+  estimateId: ID!
+}
+
+"""Out of the `convertEstimateToInvoice` mutation."""
+type ConvertEstimateToInvoiceOutput {
+  """The unique identifier for the invoice that was created."""
+  invoiceId: ID!
+
+  """
+  Indicates whether the estimate was succesfully converted to an invoice.
+  """
+  didSucceed: Boolean!
+
+  """Mutation validation errors."""
+  inputErrors: [InputError!]
+}
+
+"""Input to the `estimateMarkSent` mutation."""
+input EstimateMarkSentInput {
+  """The unique identifier for the estimate."""
+  estimateId: ID!
+
+  """How the estimate was sent."""
+  sendMethod: EstimateSendMethod!
+
+  """When the estimate was sent."""
+  sentAt: DateTime
+}
+
+"""Output of the `estimateMarkSent` mutation."""
+type EstimateMarkSentOutput {
+  """Estimate that was marked as sent."""
+  estimate: AREstimate
+
+  """Indicates whether the estimate was successfully marked as sent."""
+  didSucceed: Boolean!
+
+  """Mutation validation errors."""
+  inputErrors: [InputError!]
+}
+
+"""Input to the `estimateMarkAccepted` mutation."""
+input EstimateMarkAcceptedInput {
+  """The unique identifier for the estimate."""
+  estimateId: ID!
+}
+
+"""Input to the `estimateResetAcceptance` mutation."""
+input EstimateResetAcceptanceInput {
+  """The unique identifier for the estimate."""
+  estimateId: ID!
+}
+
+"""Output of the `estimateMarkAccepted` mutation."""
+type EstimateMarkAcceptedOutput {
+  """Estimate that was marked as accepted."""
+  estimate: AREstimate
+
+  """Indicates whether the estimate was successfully marked as accepted."""
+  didSucceed: Boolean!
+
+  """Mutation validation errors."""
+  inputErrors: [InputError!]
+}
+
+"""Output of the `estimateResetAcceptance` mutation."""
+type EstimateResetAcceptanceOutput {
+  """Estimate that was reset."""
+  estimate: AREstimate
+
+  """Indicates whether the estimate was successfully reset."""
+  didSucceed: Boolean!
+
+  """Mutation validation errors."""
+  inputErrors: [InputError!]
+}
+
+"""Input to the `estimateSend` mutation."""
+input EstimateSendInput {
+  """The unique identifier for the estimate."""
+  estimateId: ID!
+
+  """Email addresses to receive an email."""
+  to: [String!]!
+
+  """Subject line of the email."""
+  subject: String
+
+  """Message body of the email."""
+  message: String
+
+  """Include a PDF of the estimate as an attachment."""
+  attachPDF: Boolean! = false
+
+  """Email address from"""
+  fromAddress: String
+
+  """Carbon copy email."""
+  ccMyself: Boolean
+
+  """Hide grand total in the email."""
+  hideGrandTotal: Boolean = false
+
+  """
+  Whether attachments should be included in the email. Defaults to false.
+  """
+  includeAttachments: Boolean = false
+}
+
+"""Output of the `estimateSend` mutation."""
+type EstimateSendOutput {
+  """Estimate that was sent."""
+  estimate: AREstimate
+
+  """Indicates whether the estimate was successfully queued for sending."""
+  didSucceed: Boolean!
+
+  """Mutation validation errors."""
+  inputErrors: [InputError!]
+}
+
+"""Input to the `estimateSendAcceptanceCustomerEmail` mutation."""
+input EstimateSendAcceptanceCustomerEmailInput {
+  """The unique identifier for the estimate."""
+  estimateId: ID!
+}
+
+"""Output to the `estimateSendAcceptanceCustomerEmail` mutation."""
+type EstimateSendAcceptanceCustomerEmailOutput {
+  """Estimate that was sent."""
+  estimate: AREstimate
+
+  """Indicates whether the estimate was successfully queued for sending."""
+  didSucceed: Boolean!
+
+  """Mutation validation errors."""
+  inputErrors: [InputError!]
+}
+
+"""Options by which estimates can be ordered."""
+enum EstimateSort {
+  """Ascending by amount due."""
+  AMOUNT_DUE_ASC
+
+  """Descending by amount due."""
+  AMOUNT_DUE_DESC
+
+  """Ascending by amount paid."""
+  AMOUNT_PAID_ASC
+
+  """Descending by amount paid."""
+  AMOUNT_PAID_DESC
+
+  """Ascending by creation time."""
+  CREATED_AT_ASC
+
+  """Descending by creation time."""
+  CREATED_AT_DESC
+
+  """Ascending by customer's name."""
+  CUSTOMER_NAME_ASC
+
+  """Descending by customer's name."""
+  CUSTOMER_NAME_DESC
+
+  """Ascending by due date."""
+  DUE_AT_ASC
+
+  """Descending by due date."""
+  DUE_AT_DESC
+
+  """Ascending by estimate date."""
+  ESTIMATE_DATE_ASC
+
+  """Descending by estimate date."""
+  ESTIMATE_DATE_DESC
+
+  """Ascending by estimate number."""
+  ESTIMATE_NUMBER_ASC
+
+  """Descending by estimate number."""
+  ESTIMATE_NUMBER_DESC
+
+  """Ascending by modified date."""
+  MODIFIED_AT_ASC
+
+  """Descending by modified date."""
+  MODIFIED_AT_DESC
+
+  """Ascending by status."""
+  STATUS_ASC
+
+  """Descending by status."""
+  STATUS_DESC
+
+  """Ascending by total amount."""
+  TOTAL_ASC
+
+  """Descending by total amount."""
+  TOTAL_DESC
+}
+
+"""Options for filtering estimates by status."""
+enum EstimateListStatusFilter {
+  """Accepted estimates filter."""
+  ACCEPTED
+
+  """Active estimates filter."""
+  ACTIVE
+
+  """Approved estimates filter."""
+  APPROVED
+
+  """Converted estimates filter."""
+  CONVERTED
+
+  """Draft estimates filter."""
+  DRAFT
+
+  """Expired estimates filter."""
+  EXPIRED
+
+  """Paid estimates filter."""
+  PAID
+
+  """Partially paid estimates filter."""
+  PARTIAL
+
+  """Rejected estimates filter."""
+  REJECTED
+
+  """Sent estimates filter."""
+  SENT
+
+  """Unpaid estimates filter."""
+  UNPAID
+
+  """Viewed estimates filter."""
+  VIEWED
+}
+
+"""Estimate connection."""
+type EstimateConnection {
+  """List of estimates."""
+  edges: [EstimateEdge!]!
+
+  """Information about pagination."""
+  pageInfo: OffsetPageInfo!
+}
+
+"""Estimate edge."""
+type EstimateEdge {
+  """An estimate."""
+  node: AREstimate!
+}
+
+"""Input to the `estimateGeneratePdf` mutation"""
+input EstimateGeneratePdfInput {
+  """The ID of the estimate"""
+  estimateId: ID!
+}
+
+"""Output of the `estimateGeneratePdf` mutation"""
+type EstimateGeneratePdfOutput {
+  """URL of the generated PDF"""
+  pdfUrl: URL
+
+  """Indicates whether the estimate PDF was successfully generated"""
+  didSucceed: Boolean!
+
+  """Mutation validation errors"""
+  inputErrors: [InputError!]
+}
+
+"""
+Record of estimate payment made for an estimate. Only populated when details of a specific estimate is requested. Does not get populated for a list of estimates.
+"""
+type EstimatePayment {
+  """Estimate associated with the estimate payment."""
+  estimate: AREstimate
+
+  """Unique identifier for the estimate payment."""
+  id: ID!
+
+  """
+  Date payment was made for the Estimate associated with the estimate payment.
+  """
+  paymentDate: Date
+
+  """When the payment was created."""
+  createdAt: DateTime!
+
+  """When the payment was last modified."""
+  modifiedAt: DateTime!
+
+  """Estimate Payment memo (notes) text."""
+  memo: String
+
+  """Amount paid for the Estimate associated with the Estimate Payment."""
+  amount: String
+
+  """AccountId from where the funds are sourced from payment."""
+  paymentAccountId: String!
+
+  """
+  Method of payment used to make payments for the Estimate associated with the Estimate Payment.
+  """
+  paymentMethod: EstimatePaymentMethod
+
+  """
+  Additional details on the payment made for the Estimate associated with the Estimate Payment.
+  """
+  paymentDetails: EstimatePaymentDetail
+
+  """Readonly url for the payment receipt"""
+  readonlyUrl: String
+
+  """Payment origin"""
+  origin: String
+
+  """Payment state"""
+  state: String
+
+  """Type of transaction"""
+  transactionType: EstimateTransactionType
+
+  """Payment provider"""
+  paymentProvider: EstimatePaymentProvider
+
+  """Estimate currency"""
+  currency: Currency
+
+  """Payment method ID"""
+  paymentMethodId: String
+
+  """Active"""
+  active: Boolean
+
+  """Payment platform ID"""
+  transactionId: String
+
+  """Confirmation code"""
+  confirmationCode: String
+
+  """Origin payment ID, set in case of a refund"""
+  originPaymentId: String
+}
+
+"""Estimate payment methods"""
+enum EstimatePaymentMethod {
+  """Bank transfer."""
+  BANK_TRANSFER
+
+  """Cash."""
+  CASH
+
+  """Cheque."""
+  CHEQUE
+
+  """Credit card."""
+  CREDIT_CARD
+
+  """Other."""
+  OTHER
+
+  """Paypal."""
+  PAYPAL
+}
+
+"""Estimate transaction type"""
+enum EstimateTransactionType {
+  """Deposit"""
+  DEPOSIT
+
+  """Refund"""
+  REFUND
+
+  """Void"""
+  VOID
+}
+
+"""Estimate payment provider"""
+enum EstimatePaymentProvider {
+  """Adyen"""
+  ADYEN
+
+  """Manual"""
+  MANUAL
+
+  """Wpp"""
+  WPP
+}
+
+"""Input to the `estimateDepositPaymentCreateManual` mutation."""
+input EstimateDepositPaymentCreateManualInput {
+  """
+  The unique global identifier for the estimate. This encoded ID also contains the bizId.
+  """
+  estimateId: ID!
+
+  """Actual payment date."""
+  paymentDate: Date!
+
+  """Payment amount in dollars and cents. eg 123.45"""
+  amount: Decimal!
+
+  """Payment method."""
+  paymentMethod: EstimatePaymentMethod!
+
+  """The unique identifier for the payment account."""
+  paymentAccountId: ID
+
+  """Memo / Notes."""
+  memo: String
+}
+
+"""Input to the `estimateDepositPaymentUpdateManual` mutation."""
+input EstimateDepositPaymentUpdateManualInput {
+  """The unique identifier for the estimate payment."""
+  id: ID!
+
+  """
+  The unique global identifier for the estimate. This encoded ID also contains the bizId.
+  """
+  estimateId: ID!
+
+  """Actual payment date."""
+  paymentDate: Date
+
+  """Payment amount in dollars and cents. eg 123.45"""
+  amount: Decimal
+
+  """Payment method."""
+  paymentMethod: EstimatePaymentMethod
+
+  """The unique identifier for the payment account."""
+  paymentAccountId: ID
+
+  """Memo / Notes."""
+  memo: String
+}
+
+"""Output of the `estimateManualPaymentCreate` mutation."""
+type EstimatePaymentUpdateManualOutput {
+  """Updated payment resource."""
+  estimatePayment: EstimatePayment
+
+  """Indicates whether the action was successful."""
+  didSucceed: Boolean!
+
+  """Mutation validation errors."""
+  inputErrors: [InputError!]
+}
+
+"""
+Payment Detail for the payment made for an Estimate associated with an estimate payment
+"""
+type EstimatePaymentDetail {
+  """Type of card, such as `Visa`."""
+  cardType: String
+
+  """Last four digits of a card."""
+  lastFour: String
+
+  """Card expiration month"""
+  cardExpiryMonth: String
+
+  """Card expiration year"""
+  cardExpiryYear: String
+
+  """
+  Digital wallets-relevant data like if a payment is made through a digital wallets system (starting with 'ApplePay').
+  """
+  cardSource: String
+}
+
+"""Output of the `estimateManualPaymentCreate` mutation."""
+type EstimatePaymentCreateManualOutput {
+  """Entity that was created."""
+  estimatePayment: EstimatePayment
+
+  """Indicates whether the action was successful."""
+  didSucceed: Boolean!
+
+  """Mutation validation errors."""
+  inputErrors: [InputError!]
+}
+
+"""Input to the `EstimateDepositPaymentReceiptSend` mutation."""
+input EstimateDepositPaymentReceiptSendInput {
+  """The unique identifier for the estimate."""
+  estimateId: ID!
+
+  """The unique identifier for the estimate payment."""
+  estimatePaymentId: ID!
+
+  """Email addresses to receive an email."""
+  to: [String!]!
+
+  """Message body of the email."""
+  message: String
+
+  """Subject of the email."""
+  subject: String
+
+  """Include a PDF of the invoice as an attachment."""
+  attachPdf: Boolean
+
+  """Email addresses to receive an email."""
+  ccMyself: Boolean
+
+  """The address the email is from."""
+  fromAddress: String
+}
+
+"""Output of the `EstimateDepositPaymentReceiptSend` mutation."""
+type EstimateDepositPaymentReceiptSendOutput {
+  """
+  Indicates whether the estimate deposit payment receipt was successfully queued for sending.
+  """
+  didSucceed: Boolean!
+
+  """Mutation validation errors."""
+  inputErrors: [InputError!]
+}
+
+"""Input to the `estimatePaymentDelete` mutation."""
+input EstimatePaymentDeleteInput {
+  """The unique identifier for the estimate payment."""
+  id: ID!
+}
+
+"""Output of the `estimatePaymentDelete` mutation."""
+type EstimatePaymentDeleteOutput {
+  """Indicates whether the action was successful."""
+  didSucceed: Boolean!
+
+  """Mutation validation errors."""
+  inputErrors: [InputError!]
+}
+
+"""Attachment object representing a file stored in invoicing"""
+type ARAttachment {
+  """Unique identifier for the attachment."""
+  id: ID!
+
+  """The state of attachment, if it is active or soft-deleted."""
+  active: Boolean!
+
+  """The name of attachment file."""
+  fileName: String!
+
+  """The size (in bytes) of attachment file."""
+  fileSize: String!
+
+  """The file path in S3 bucket."""
+  filePath: String!
+
+  """URL to download attachment."""
+  downloadUrl: String!
+
+  """Timestamp of when the upload status was last updated."""
+  uploadStatusUpdatedAt: DateTime!
+
+  """The unique identifier for the business."""
+  businessId: ID!
+}

@@ -1,0 +1,75 @@
+{
+  "name": "wave-mcp",
+  "version": "1.0.0",
+  "description": "MCP server for Wave accounting: live transactions (list, edit, delete), every public API entity, payments and financial reports, with context-safe pagination. Also a pi package (server + skill).",
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "wave",
+    "waveapps",
+    "accounting",
+    "bookkeeping",
+    "graphql",
+    "pi-package"
+  ],
+  "type": "module",
+  "main": "src/server.js",
+  "bin": {
+    "wave-mcp": "bin/wave-mcp.js"
+  },
+  "files": [
+    "bin",
+    "src",
+    "schema",
+    "extensions",
+    "skills",
+    "docs",
+    "README.md",
+    "LICENSE",
+    "credentials.env.example"
+  ],
+  "pi": {
+    "extensions": [
+      "./extensions/wave.js"
+    ],
+    "skills": [
+      "./skills"
+    ]
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "node bin/wave-mcp.js",
+    "start:http": "node bin/wave-mcp.js serve --http",
+    "check": "node bin/wave-mcp.js check",
+    "test": "node --test test/*.test.js",
+    "test:contract": "WAVE_CONTRACT=1 node --test test/contract.live.test.js",
+    "smoke": "node scripts/smoke.mjs",
+    "docs": "node scripts/gen-docs.mjs",
+    "schema:update": "node scripts/update-schema.mjs",
+    "inspect": "npx @modelcontextprotocol/inspector node bin/wave-mcp.js",
+    "auth": "node bin/wave-mcp.js auth"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/agustinsacco/wave-mcp.git"
+  },
+  "homepage": "https://github.com/agustinsacco/wave-mcp#readme",
+  "bugs": {
+    "url": "https://github.com/agustinsacco/wave-mcp/issues"
+  },
+  "author": "Agustin Sacco",
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/node": "^2.1.2",
+    "@modelcontextprotocol/server": "^2.4.0",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@graphql-tools/mock": "^10.1.3",
+    "@graphql-tools/schema": "^11.0.8",
+    "@modelcontextprotocol/client": "^2.4.0",
+    "graphql": "^16.15.0"
+  }
+}
