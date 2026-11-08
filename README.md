@@ -363,6 +363,25 @@ a stateful fake (`test/helpers/fake-internal.js`) that reproduces the
 behaviours observed live: sequence locking, JSON-encoded input errors, soft
 delete and calculated vs manual sales tax.
 
+### Releasing
+
+CI (`.github/workflows/ci.yml`) runs the tests on Node 20, 22 and 24 for every
+push and pull request. When a push to `master` has a `package.json` version
+that isn't on npm yet, and the tests pass, CI publishes it with provenance,
+then tags `v<version>` and creates a GitHub release. To release:
+
+```bash
+npm version minor --no-git-tag-version   # or patch / major
+npm run docs                             # TOOLS.md records the version
+git commit -am "x.y.z: what changed" && git push
+```
+
+A version with a hyphen, such as `1.2.0-beta.1`, goes to the `next` dist-tag.
+CI publishes through npm trusted publishing, so no npm token is stored in
+GitHub. It was set up once with
+`npm trust github @saccolabs/wave-mcp --repo agustinsacco/wave-mcp --file ci.yml --allow-publish`.
+A `NPM_TOKEN` repository secret also works, as a fallback.
+
 ## Related
 
 [questrade-mcp](https://github.com/agustinsacco/questrade-mcp), a read-only

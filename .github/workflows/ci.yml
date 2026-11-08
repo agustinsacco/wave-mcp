@@ -1,0 +1,101 @@
+name: ci
+# Every push and pull request runs the tests on Node 20, 22 and 24.
+# A push to the default branch whose package.json version is not on npm yet
+# is then published (with provenance), tagged v<version> and given a GitHub
+# release. Releasing = bump "version" in package.json, commit, push.
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node: [20, 22, 24]
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+      - run: npm ci
+      - run: npm test
+
+  release:
+    needs: test
+    if: github.event_name != 'pull_request' && github.ref_name == github.event.repository.default_branch
+    runs-on: ubuntu-latest
+    concurrency:
+      group: release
+      cancel-in-progress: false
+    permissions:
+      contents: write # tag and GitHub release
+      id-token: write # npm provenance, and trusted publishing when configured
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+          cache: npm
+
+      - name: Is this version already on npm?
+        id: check
+        env:
+          # Ask anonymously: setup-node's placeholder token makes npm answer "not found".
+          NPM_CONFIG_USERCONFIG: /dev/null
+        run: |
+          name=$(node -p "require('./package.json').name")
+          version=$(node -p "require('./package.json').version")
+          echo "name=$name" >> "$GITHUB_OUTPUT"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          if out=$(npm view "$name@$version" version 2>&1); then
+            if [ "$out" = "$version" ]; then
+              echo "publish=false" >> "$GITHUB_OUTPUT"
+              echo "::notice::$name@$version is already on npm; nothing to release."
+              exit 0
+            fi
+          elif ! grep -q E404 <<<"$out"; then
+            echo "$out"; echo "::error::Could not ask npm whether $name@$version exists."; exit 1
+          fi
+          echo "publish=true" >> "$GITHUB_OUTPUT"
+          echo "::notice::Releasing $name@$version"
+
+      - if: steps.check.outputs.publish == 'true'
+        run: npm ci
+      - if: steps.check.outputs.publish == 'true'
+        name: Package contents
+        run: npm pack --dry-run
+
+      - if: steps.check.outputs.publish == 'true'
+        name: Publish to npm
+        env:
+          # Trusted publishing (npm trust github ... --file ci.yml) needs no secret: npm
+          # uses this job's OIDC identity. NPM_TOKEN is only a fallback.
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          version='${{ steps.check.outputs.version }}'
+          tag=latest
+          case "$version" in *-*) tag=next ;; esac
+          npm publish --provenance --access public --tag "$tag"
+
+      - if: steps.check.outputs.publish == 'true'
+        name: Tag and GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag="v${{ steps.check.outputs.version }}"
+          if existing=$(git rev-parse -q --verify "refs/tags/$tag^{commit}"); then
+            [ "$existing" = "$GITHUB_SHA" ] || echo "::warning::$tag already exists at $existing, not at the published commit $GITHUB_SHA; leaving it."
+          fi
+          pre=; case "$tag" in *-*) pre=--prerelease ;; esac
+          gh release create "$tag" --target "$GITHUB_SHA" --title "$tag" --generate-notes $pre
