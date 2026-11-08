@@ -31,7 +31,7 @@ flooding its context.
 | Reports | `wave_run_report` (below) | — |
 | Anything else | `wave_graphql_query` (read-only escape hatch) | — |
 
-72 tools, 3 resources (`wave://guide`, `wave://limitations`, `wave://schema`)
+73 tools, 3 resources (`wave://guide`, `wave://limitations`, `wave://schema`)
 and 3 prompts (`month_end_review`, `chase_overdue_invoices`, `record_expense`).
 Every tool, parameter and default is listed in **[docs/TOOLS.md](docs/TOOLS.md)**,
 which is generated from the server.
@@ -57,8 +57,8 @@ reported per original currency.
 ### Transactions (web-app API)
 
 Wave's public API can create transactions but not read, edit or delete them.
-`wave_list_transactions`, `wave_get_transaction`, `wave_update_transaction` and
-`wave_delete_transaction` use `gql.waveapps.com/graphql/internal`, the API
+`wave_list_transactions`, `wave_summarize_transactions`, `wave_get_transaction`,
+`wave_update_transaction` and `wave_delete_transaction` use `gql.waveapps.com/graphql/internal`, the API
 behind next.waveapps.com, with the same operations the web app sends. It is
 **unofficial**: Wave can change it without notice, and it only accepts a
 browser session token (see `wave-mcp login` below), not API tokens.
@@ -126,7 +126,7 @@ pi install git:github.com/agustinsacco/wave-mcp   # or straight from GitHub
 ```
 
 pi installs the npm dependencies. The package's extension registers the
-`wave` MCP server for every session (codemode exposure, which keeps the 72
+`wave` MCP server for every session (codemode exposure, which keeps the 73
 tool schemas out of the context until a script uses them), and the skill joins
 every session's skill index. Phosphor can also install it from Settings →
 Skills & extensions. Until someone signs in, each new session shows:

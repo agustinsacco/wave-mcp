@@ -18,7 +18,7 @@ test('stdio: the real binary handshakes (2025 era), lists tools and answers a ca
   assert.equal(client.getServerVersion().name, 'wave-mcp');
   assert.match(client.getInstructions(), /wave_get_context/);
   const { tools } = await client.listTools();
-  assert.equal(tools.length, 72);
+  assert.equal(tools.length, 73);
   const r = await client.callTool({ name: 'wave_get_context', arguments: {} });
   assert.equal(JSON.parse(r.content[0].text).auth.mode, 'none');
 });
@@ -31,7 +31,7 @@ test('stdio: read-only mode via env', async (t) => {
   const { tools } = await client.listTools();
   // Only wave_import_ledger may write, and only to this server's own ledger file.
   assert.deepEqual(tools.filter((x) => !x.annotations.readOnlyHint).map((x) => x.name), ['wave_import_ledger']);
-  assert.equal(tools.length, 29);
+  assert.equal(tools.length, 30);
 });
 
 async function httpServer(t, credentials, env = {}) {
@@ -64,7 +64,7 @@ test('http: bearer token is enforced when configured', async (t) => {
   assert.equal((await fetch(`${base}/mcp`, { ...init, headers: { ...init.headers, Authorization: 'Bearer wrong' } })).status, 401);
   const client = new Client({ name: 'http-test', version: '1.0.0' });
   await client.connect(new StreamableHTTPClientTransport(new URL(`${base}/mcp`), { requestInit: { headers: { Authorization: 'Bearer s3cret-value' } } }));
-  assert.equal((await client.listTools()).tools.length, 72);
+  assert.equal((await client.listTools()).tools.length, 73);
   await client.close();
 });
 

@@ -8,7 +8,7 @@ import { cli } from './cli.js';
  */
 export const LIMITATIONS = {
   summary: [
-    `No transaction reads or edits in the public API: it can only create them. wave_list_transactions, wave_get_transaction, wave_update_transaction and wave_delete_transaction use Wave's web-app API instead (unofficial; needs a browser session stored with ${cli('login')}, which expires). For dated reports, import Wave's Data Export (Settings → Data Export → Accounting) with wave_import_ledger; the ledger reports then work as of the export date.`,
+    `No transaction reads or edits in the public API: it can only create them. wave_list_transactions, wave_summarize_transactions, wave_get_transaction, wave_update_transaction and wave_delete_transaction use Wave's web-app API instead (unofficial; needs a browser session stored with ${cli('login')}, which expires). For dated reports, import Wave's Data Export (Settings → Data Export → Accounting) with wave_import_ledger; the ledger reports then work as of the export date.`,
     'No native reports. wave_run_report computes them: from the imported ledger (any date range: P&L, balance sheet, cash flow, trial balance, account transactions, sales tax, aged payables, purchases by vendor), or live from the API (invoices, payments, current account balances).',
     'Without an imported ledger, account balances are current only (no as-of date) and there are no bills or expenses by date.',
     'No payroll data and no tax-line mapping, so Payroll Wage & Tax, Payroll Benefits & Deductions and Tax Line reports are not possible.',

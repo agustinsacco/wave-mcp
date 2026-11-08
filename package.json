@@ -1,6 +1,6 @@
 {
   "name": "@saccolabs/wave-mcp",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "description": "MCP server for Wave accounting: live transactions (list, edit, delete), every public API entity, payments and financial reports, with context-safe pagination. Also a pi package (server + skill).",
   "keywords": [
     "mcp",

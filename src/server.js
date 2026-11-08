@@ -26,11 +26,12 @@ export const INSTRUCTIONS = `Wave accounting (waveapps.com). Call wave_get_conte
 - Uses Wave's public GraphQL API, plus Wave's web-app API for transactions.
 - Call wave_get_context first: it shows the businesses this credential reaches and the default one. Every other tool takes an optional businessId.
 - Lists are paginated (page/pageSize, or offset/limit for reports and payments). Ask for small pages, follow nextPage/nextOffset only when needed, and prefer detail="summary".
-- Transactions (live): wave_list_transactions, wave_get_transaction, wave_update_transaction and wave_delete_transaction use Wave's web-app API, which needs a browser session (wave_get_context shows auth.webSession). Sessions end when the user signs out of Wave or they time out; then ask the user to run ${cli('login')} in a terminal on ${HOST} and paste a request copied from the Wave web app (the command explains how). No restart is needed. Edits send the transaction's sequence, so they never overwrite a newer change.
+- Transactions (live): wave_list_transactions, wave_summarize_transactions, wave_get_transaction, wave_update_transaction and wave_delete_transaction use Wave's web-app API, which needs a browser session (wave_get_context shows auth.webSession). Sessions end when the user signs out of Wave or they time out; then ask the user to run ${cli('login')} in a terminal on ${HOST} and paste a request copied from the Wave web app (the command explains how). No restart is needed. For totals (spend per category, month or vendor) call wave_summarize_transactions rather than paging through rows. accountId filters by the bank/card account; categoryIds by income/expense category. Edits send the transaction's sequence, so they never overwrite a newer change.
 - Wave's public API has no reports. wave_run_report computes them from an imported Data Export (wave_import_ledger, a snapshot: check ledger.importedAt) or falls back to invoices and current balances; every report states its basis. wave_list_ledger_transactions searches that snapshot.
 - Never ask the user to paste access tokens, session tokens or curl commands into the chat. The user sets credentials in a terminal on ${HOST}: ${cli('login')} (pastes a request copied from the browser) or ${cli('secrets set WAVE_ACCESS_TOKEN')}. You may run ${cli('check')} yourself to verify; it prints no secrets.
 - Writes change real books. wave_send_* tools email real customers; confirm recipients and amounts with the user first. wave_create_transaction supports dryRun.
-- Line items on invoices and estimates must reference a product (wave_list_products).`;
+- Line items on invoices and estimates must reference a product (wave_list_products).
+- Not available at all: bills, bill payments, reconciliation, receipts and tags (see wave://limitations). Say so instead of searching for them; aged_payables needs an imported Data Export.`;
 
 /**
  * Build one MCP server instance over the shared WaveContext. Cheap: under

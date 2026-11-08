@@ -19,8 +19,9 @@ export function nodeCommand(execPath = process.execPath) {
 }
 
 export const DESCRIPTION =
-  'Wave accounting (waveapps): transactions (live list/edit/delete), invoices, estimates, customers, vendors, products, accounts, sales taxes, payments and reports. ' +
-  `Load skill wave-accounting first; sign-in: the user runs \`${cli('login')}\` in a terminal on ${HOST}`;
+  'Wave accounting (waveapps): transactions (live list/summarize/edit/delete), invoices, estimates, customers, vendors, products, accounts, sales taxes, payments and reports. ' +
+  'Load skill wave-accounting first. In codemode call tools.mcp__wave__wave_get_context({}) etc.; results are JSON in content[0].text. ' +
+  `Sign-in: the user runs \`${cli('login')}\` in a terminal on ${HOST}`;
 
 /** A one-line notice when nobody has signed in on this machine yet; undefined once credentials exist. */
 export function signInNotice(env = process.env) {

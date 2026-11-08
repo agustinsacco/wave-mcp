@@ -89,13 +89,13 @@ export function checkSides(tx, accountsById, label = 'Transaction') {
 }
 
 /** Account id → { name, normalBalanceType }, cached; null if it cannot be read (the check is then skipped). */
-async function accountSides(ctx, bid) {
+export async function accountSides(ctx, bid) {
   try {
     return await ctx.cache.get(`acct-sides:${bid}`, async () => {
       const map = new Map();
       for (const isArchived of [false, true]) {
         const scan = await scanConnection(ctx.client, OPS.ListAccounts, { businessId: bid, isArchived }, 'accounts', { limit: ctx.config.scanLimit });
-        for (const a of scan.nodes) map.set(a.id, { name: a.name, normalBalanceType: a.normalBalanceType });
+        for (const a of scan.nodes) map.set(a.id, { name: a.name, normalBalanceType: a.normalBalanceType, type: a.type?.value, subtype: a.subtype?.value });
       }
       return map;
     });

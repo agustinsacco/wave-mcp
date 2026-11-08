@@ -4,6 +4,7 @@ import { WaveApiError, WaveError, WaveInputError, describeInternalInputErrors } 
 import { fromMinor, shape, toMinor } from '../format.js';
 import { HOST, cli } from '../cli.js';
 import { DELETE, READ, UPDATE, businessId, date, defineTool, defined, detail, positiveAmount } from './common.js';
+import { accountSides } from './transactions.js';
 
 /**
  * Transactions through Wave's web-app API (unofficial, needs "wave-mcp
@@ -277,6 +278,50 @@ const salesTaxInput = z
   .optional()
   .describe('Replace the sales taxes on this line ([] removes them). Line amounts include tax. Omitted: unchanged; Wave recalculates taxes it calculated itself when the amount changes, but keeps manually set ones');
 
+
+/**
+ * Wave filters from tool arguments. accountId matches only the bank/card side
+ * of a transaction, so an income or expense category passed as accountId is
+ * moved to categoryIds (with a note) instead of silently matching nothing.
+ */
+async function buildFilters(ctx, bid, args) {
+  const notes = [];
+  const categoryIds = [...(args.categoryIds || [])];
+  let anchorId = args.accountId;
+  if (anchorId) {
+    const info = (await accountSides(ctx, bid)).get(anchorId);
+    if (info && (info.type === 'INCOME' || info.type === 'EXPENSE')) {
+      categoryIds.push(anchorId);
+      anchorId = undefined;
+      notes.push(`accountId ${info.name} is a${info.type === 'INCOME' ? 'n income' : 'n expense'} category, so it was used as categoryIds (accountId is for bank and card accounts).`);
+    }
+  }
+  const filters = defined({ startDate: args.startDate, endDate: args.endDate, description: args.search, anchorId, originType: args.source, transactionIds: args.transactionIds });
+  if (args.uncategorizedOnly) categoryIds.push(...(await uncategorizedIds(ctx, bid)));
+  if (categoryIds.length) filters.categoryIds = [...new Set(categoryIds)];
+  return { filters, notes };
+}
+
+async function listPage(ctx, bid, filters, { first, after, sort }) {
+  const data = await ctx.internal.request(IOPS.ListTransactions, { businessId: bid, filters, first, after, sort: [SORT[sort]] });
+  if (!data.business) throw new WaveError(`Business ${bid} was not found.`, { code: 'NOT_FOUND' });
+  return data.business.transactions;
+}
+
+/** Shared filter arguments of wave_list_transactions and wave_summarize_transactions. */
+const FILTERS = {
+  startDate: date.optional().describe('Earliest transaction date (inclusive)'),
+  endDate: date.optional().describe('Latest transaction date (inclusive)'),
+  search: z.string().min(1).optional().describe('Text in the transaction description or a line description (case-insensitive)'),
+  accountId: z.string().min(1).optional().describe('Bank or card account (wave_list_accounts): transactions paid from or into it. An income/expense category given here is treated as categoryIds'),
+  categoryIds: z.array(z.string().min(1)).max(50).optional().describe('Category accounts (income/expense, wave_list_accounts with search): transactions with a line in any of them'),
+  uncategorizedOnly: z.boolean().default(false).describe('Only transactions still in Uncategorized Income/Expense'),
+  source: z
+    .enum(['MANUAL', 'PLAID', 'YODLEE', 'CASHEDGE', 'GENERIC_EXTERNAL_API', 'RECEIPT', 'RECEIPT_CAPTURE', 'SHOPIFY', 'STRIPE', 'PAYPAL', 'ETSY', 'SHOEBOXED', 'ZAPIER', 'DIRECT_PAYMENT', 'WAVE_CHECKOUT', 'WAVE_PAYMENTS', 'WAVE_PAYROLL'])
+    .optional()
+    .describe('Where it came from: MANUAL = statement upload; PLAID/YODLEE/CASHEDGE = bank connection; GENERIC_EXTERNAL_API = API (wave_create_transaction); RECEIPT/RECEIPT_CAPTURE = receipts. Entries typed into Wave have no source'),
+};
+
 export function registerLiveTransactionTools(server, ctx) {
   defineTool(server, ctx, {
     name: 'wave_list_transactions',
@@ -285,22 +330,13 @@ export function registerLiveTransactionTools(server, ctx) {
     annotations: { ...READ, openWorldHint: true },
     description: [
       "List and search the business's transactions as Wave's Transactions page shows them: bank and card transactions, expenses, deposits, transfers, bill and invoice payments. Live data.",
-      'Filter by date range, text in the description, bank/card account (accountId), category accounts (categoryIds) or uncategorizedOnly. Cursor pagination: pass nextCursor back as cursor.',
+      'Filter by date range, text in the description, bank/card account (accountId), category accounts (categoryIds) or uncategorizedOnly. Cursor pagination: pass nextCursor back as cursor. For totals (spend per category, month, vendor or account) use wave_summarize_transactions instead of paging through rows.',
       'Each row has the amount, direction, bank/card account, category (or categories when split), vendor, sales tax and review status. IDs work with wave_get_transaction, wave_update_transaction and wave_delete_transaction.',
       VIA,
     ].join(' '),
     input: z.object({
       businessId,
-      startDate: date.optional().describe('Earliest transaction date (inclusive)'),
-      endDate: date.optional().describe('Latest transaction date (inclusive)'),
-      search: z.string().min(1).optional().describe('Text in the transaction description or a line description (case-insensitive)'),
-      accountId: z.string().min(1).optional().describe('Account register: transactions with any line on this account, usually a bank or card account; includes journal entries that touch it (wave_list_accounts)'),
-      categoryIds: z.array(z.string().min(1)).max(50).optional().describe('Only transactions with a line in one of these category accounts'),
-      uncategorizedOnly: z.boolean().default(false).describe('Only transactions still in Uncategorized Income/Expense'),
-      source: z
-        .enum(['MANUAL', 'PLAID', 'YODLEE', 'CASHEDGE', 'GENERIC_EXTERNAL_API', 'RECEIPT', 'RECEIPT_CAPTURE', 'SHOPIFY', 'STRIPE', 'PAYPAL', 'ETSY', 'SHOEBOXED', 'ZAPIER', 'DIRECT_PAYMENT', 'WAVE_CHECKOUT', 'WAVE_PAYMENTS', 'WAVE_PAYROLL'])
-        .optional()
-        .describe('Where it came from: MANUAL = statement upload; PLAID/YODLEE/CASHEDGE = bank connection; GENERIC_EXTERNAL_API = API (wave_create_transaction); RECEIPT/RECEIPT_CAPTURE = receipts. Entries typed into Wave have no source'),
+      ...FILTERS,
       transactionIds: z.array(z.string().min(1)).max(100).optional(),
       sort: z.enum(['date_desc', 'date_asc']).default('date_desc').describe('By transaction date'),
       pageSize: z.number().int().min(1).max(100).default(25).describe('Rows per page (max 100)'),
@@ -309,13 +345,8 @@ export function registerLiveTransactionTools(server, ctx) {
     }),
     handler: async (args) => {
       const bid = await ctx.resolveBusinessId(args.businessId);
-      const filters = defined({ startDate: args.startDate, endDate: args.endDate, description: args.search, anchorId: args.accountId, originType: args.source, transactionIds: args.transactionIds });
-      const categoryIds = [...(args.categoryIds || [])];
-      if (args.uncategorizedOnly) categoryIds.push(...(await uncategorizedIds(ctx, bid)));
-      if (categoryIds.length) filters.categoryIds = [...new Set(categoryIds)];
-      const data = await ctx.internal.request(IOPS.ListTransactions, { businessId: bid, filters, first: args.pageSize, after: args.cursor, sort: [SORT[args.sort]] });
-      if (!data.business) throw new WaveError(`Business ${bid} was not found.`, { code: 'NOT_FOUND' });
-      const conn = data.business.transactions;
+      const { filters, notes } = await buildFilters(ctx, bid, args);
+      const conn = await listPage(ctx, bid, filters, { first: args.pageSize, after: args.cursor, sort: args.sort });
       const edges = conn.edges;
       // Build the page from its first n rows. When the whole page would pass
       // the response cap, return fewer rows and point nextCursor at the last
@@ -327,6 +358,7 @@ export function registerLiveTransactionTools(server, ctx) {
         const hasMore = cut || Boolean(conn.pageInfo?.hasNextPage);
         return {
           filters,
+          ...(notes.length ? { notes } : {}),
           items: nodes.map((t) => shape(summarizeTransaction(t, { full: args.detail === 'full' }), args.detail)),
           count: nodes.length,
           pageTotals: { deposits: sum('DEPOSIT'), withdrawals: sum('WITHDRAWAL') },
@@ -343,6 +375,110 @@ export function registerLiveTransactionTools(server, ctx) {
         out = build(n);
       }
       return out;
+    },
+  });
+
+  defineTool(server, ctx, {
+    name: 'wave_summarize_transactions',
+    title: 'Summarize transactions',
+    toolset: 'transactions',
+    annotations: { ...READ, openWorldHint: true },
+    description: [
+      'Totals over every matching transaction, grouped by category, month, vendor, customer or bank/card account: how much was spent on Marketing this year, spend per month, top vendors. Pages through Wave itself and returns only the totals, so use it instead of paging wave_list_transactions to add things up.',
+      'Same filters as wave_list_transactions. Sums line amounts (which include sales tax): money-out lines (debits) are withdrawals, money-in lines (credits) are deposits; journal entries count by the same debit/credit rule. With categoryIds, only the lines in those categories count, so split transactions are not double counted.',
+      VIA,
+    ].join(' '),
+    input: z.object({
+      businessId,
+      ...FILTERS,
+      groupBy: z.enum(['category', 'month', 'vendor', 'customer', 'account', 'none']).default('category').describe('account = the bank/card account; none = totals only'),
+      maxGroups: z.number().int().min(1).max(200).default(50).describe('Largest groups to return; the rest are added up in otherGroups'),
+    }),
+    handler: async (args) => {
+      const bid = await ctx.resolveBusinessId(args.businessId);
+      const { filters, notes } = await buildFilters(ctx, bid, args);
+      const only = filters.categoryIds ? new Set(filters.categoryIds) : undefined;
+      const keyOf = {
+        category: (tx, l) => l.account?.name || '(no category)',
+        month: (tx) => tx.date.slice(0, 7),
+        vendor: (tx, l) => (l.vendor || tx.lineItems.find((x) => x.vendor)?.vendor)?.name || '(no vendor)',
+        customer: (tx, l) => (l.customer || tx.lineItems.find((x) => x.customer)?.customer)?.name || '(no customer)',
+        account: (tx) => tx.anchorLineItem?.account?.name || '(journal entry)',
+        none: () => 'all',
+      }[args.groupBy];
+      const groups = new Map();
+      const totals = new Map();
+      const blank = () => ({ ids: new Set(), out: 0, in: 0, taxOut: 0, taxIn: 0 });
+      const add = (g, tx, l) => {
+        const minor = toMinor(l.amount);
+        const tax = toMinor(l.taxSummary?.totalTaxAmount);
+        g.ids.add(tx.id);
+        if (l.itemType === 'CREDIT') (g.in += minor), (g.taxIn += tax);
+        else (g.out += minor), (g.taxOut += tax);
+      };
+      let seen = 0, first, last, cursor, truncated = false;
+      for (;;) {
+        const conn = await listPage(ctx, bid, filters, { first: 100, after: cursor, sort: 'date_desc' });
+        for (const { node: tx } of conn.edges) {
+          seen++;
+          first = first === undefined || tx.date < first ? tx.date : first;
+          last = last === undefined || tx.date > last ? tx.date : last;
+          const currency = tx.currency?.code || '';
+          for (const l of tx.lineItems || []) {
+            if (only && !only.has(l.account?.id)) continue;
+            const key = `${currency}\u0000${keyOf(tx, l)}`;
+            if (!groups.has(key)) groups.set(key, blank());
+            if (!totals.has(currency)) totals.set(currency, blank());
+            add(groups.get(key), tx, l);
+            add(totals.get(currency), tx, l);
+          }
+        }
+        if (!conn.pageInfo?.hasNextPage || !conn.edges.length) break;
+        if (seen >= ctx.config.scanLimit) {
+          truncated = true;
+          break;
+        }
+        cursor = conn.pageInfo.endCursor;
+      }
+      const multi = totals.size > 1;
+      const row = (g, extra) =>
+        defined({
+          ...extra,
+          transactions: g.ids.size,
+          withdrawals: fromMinor(g.out),
+          deposits: fromMinor(g.in),
+          net: fromMinor(g.in - g.out),
+          salesTaxPaid: g.taxOut ? fromMinor(g.taxOut) : undefined,
+          salesTaxCollected: g.taxIn ? fromMinor(g.taxIn) : undefined,
+        });
+      let rows = [...groups].map(([k, g]) => {
+        const [currency, key] = k.split('\u0000');
+        return { key, currency, g };
+      });
+      if (args.groupBy === 'month') rows.sort((a, b) => a.key.localeCompare(b.key));
+      else rows.sort((a, b) => b.g.out + b.g.in - (a.g.out + a.g.in) || a.key.localeCompare(b.key));
+      const kept = rows.slice(0, args.maxGroups);
+      const rest = rows.slice(args.maxGroups);
+      const other = rest.length ? rest.reduce((acc, r) => {
+        r.g.ids.forEach((id) => acc.ids.add(id));
+        acc.out += r.g.out; acc.in += r.g.in; acc.taxOut += r.g.taxOut; acc.taxIn += r.g.taxIn;
+        return acc;
+      }, blank()) : undefined;
+      const totalRows = [...totals].map(([currency, g]) => row(g, { currency: currency || undefined }));
+      if (multi) notes.push('Transactions are in more than one currency: totals are per currency and not converted.');
+      if (!seen) notes.push('No transactions matched these filters.');
+      return {
+        filters,
+        groupBy: args.groupBy,
+        basis: 'Line amounts, which include sales tax: withdrawals are money-out (debit) lines, deposits money-in (credit) lines. salesTaxPaid / salesTaxCollected is the tax inside them, so the amount before tax is withdrawals minus salesTaxPaid.',
+        matched: seen,
+        ...(seen ? { dates: { from: first, to: last } } : {}),
+        totals: multi ? totalRows : totalRows[0] || { transactions: 0, withdrawals: '0.00', deposits: '0.00', net: '0.00' },
+        ...(args.groupBy === 'none' ? {} : { groups: kept.map((r) => row(r.g, { [args.groupBy]: r.key, ...(multi ? { currency: r.currency } : {}) })) }),
+        ...(other ? { otherGroups: row(other, { groups: rest.length }) } : {}),
+        ...(notes.length ? { notes } : {}),
+        ...(truncated ? { truncated: `Stopped after ${seen} transactions (WAVE_MCP_SCAN_LIMIT). Narrow the dates or filters for complete totals.` } : {}),
+      };
     },
   });
 

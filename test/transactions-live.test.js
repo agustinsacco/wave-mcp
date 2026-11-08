@@ -358,3 +358,52 @@ test('login recognizes a public API token and rejects expired ones', async () =>
   assert.match(err.text, /expired or signed out/);
   assert.equal(fs.existsSync(f2), false, 'nothing written');
 });
+
+test('summarize adds up every page by category and month, counting only the filtered lines of splits', async (t) => {
+  const rent = { id: 'acct-rent', name: 'Rent' };
+  const split = makeTx(140, { date: '2026-09-15', amount: '150.00', description: 'Split purchase' });
+  split.lineItems = [
+    { ...split.lineItems[0], order: 1, amount: '100', account: rent, taxSummary: { totalTaxAmount: '4.76', taxLiabilities: [] } },
+    { ...split.lineItems[0], order: 2, amount: '50', account: ACC.marketing },
+  ];
+  const refund = makeTx(141, { date: '2026-09-20', amount: '20.00', description: 'Refund' });
+  refund.direction = 'DEPOSIT';
+  refund.anchorLineItem.itemType = 'DEBIT';
+  refund.lineItems[0].itemType = 'CREDIT';
+  const txs = [...Array.from({ length: 130 }, (_, i) => makeTx(i + 1, { date: `2026-${String(1 + (i % 8)).padStart(2, '0')}-10` })), split, refund];
+  const h = await live(t, { transactions: txs });
+
+  const all = await h.call('wave_summarize_transactions', { groupBy: 'month' });
+  assert.equal(all.isError, false, all.text);
+  assert.equal(all.json.matched, 132);
+  assert.deepEqual(all.json.totals, { currency: 'CAD', transactions: 132, withdrawals: '1450.00', deposits: '20.00', net: '-1430.00', salesTaxPaid: '4.76' });
+  assert.equal(all.json.groups[0].month, '2026-01');
+  assert.equal(all.json.groups.at(-1).month, '2026-09');
+  assert.equal(h.internal.calls.filter((c) => c.name === 'ListTransactions').length, 2, 'paged 100 at a time');
+
+  const rentOnly = await h.call('wave_summarize_transactions', { categoryIds: ['acct-rent'] });
+  assert.deepEqual(rentOnly.json.groups, [{ category: 'Rent', transactions: 1, withdrawals: '100.00', deposits: '0.00', net: '-100.00', salesTaxPaid: '4.76' }]);
+  assert.equal(rentOnly.json.totals.withdrawals, '100.00', 'the marketing half of the split is not counted');
+
+  const capped = await h.call('wave_summarize_transactions', { groupBy: 'month', maxGroups: 3 });
+  assert.equal(capped.json.groups.length, 3);
+  assert.equal(capped.json.otherGroups.groups, 6);
+
+  const none = await h.call('wave_summarize_transactions', { groupBy: 'none', search: 'nothing like this' });
+  assert.equal(none.json.matched, 0);
+  assert.equal(none.json.groups, undefined);
+  assert.match(none.json.notes[0], /No transactions matched/);
+});
+
+test('an expense category passed as accountId is used as a category filter, with a note', async (t) => {
+  const rent = { id: 'acct-rent', name: 'Rent' };
+  const h = await live(t, { transactions: [makeTx(1, { category: rent }), makeTx(2)] });
+  const r = await h.call('wave_list_transactions', { accountId: 'acct-rent' });
+  assert.equal(r.json.count, 1);
+  assert.deepEqual(r.json.filters.categoryIds, ['acct-rent']);
+  assert.equal(r.json.filters.anchorId, undefined);
+  assert.match(r.json.notes[0], /Rent is an expense category, so it was used as categoryIds/);
+  const bank = await h.call('wave_list_transactions', { accountId: 'acct-bank' });
+  assert.equal(bank.json.filters.anchorId, 'acct-bank', 'bank accounts stay an account filter');
+  assert.equal(bank.json.notes, undefined);
+});

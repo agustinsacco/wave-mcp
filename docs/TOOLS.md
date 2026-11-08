@@ -1,8 +1,8 @@
 # Wave Accounting: tools, resources and prompts
 
-Generated from @saccolabs/wave-mcp 1.0.1 by `npm run docs`; do not edit by hand.
+Generated from @saccolabs/wave-mcp 1.1.0 by `npm run docs`; do not edit by hand.
 
-72 tools in 13 toolsets (28 read, 44 write), 3 resources and 3 prompts.
+73 tools in 13 toolsets (29 read, 44 write), 3 resources and 3 prompts.
 Limit the toolsets with `WAVE_MCP_TOOLSETS` (comma-separated).
 
 ## Tools
@@ -119,6 +119,7 @@ Limit the toolsets with `WAVE_MCP_TOOLSETS` (comma-separated).
 | [`wave_create_transaction`](#wave_create_transaction) | write | Record a bank/credit-card transaction and categorize it, as if entered in Wave's Transactions page. |
 | [`wave_create_transactions`](#wave_create_transactions) | write | Create up to 50 money transactions in one request (same shape as wave_create_transaction). |
 | [`wave_list_transactions`](#wave_list_transactions) | read | List and search the business's transactions as Wave's Transactions page shows them: bank and card transactions, expenses, deposits, transfers, bill and invoice payments. |
+| [`wave_summarize_transactions`](#wave_summarize_transactions) | read | Totals over every matching transaction, grouped by category, month, vendor, customer or bank/card account: how much was spent on Marketing this year, spend per month, top vendors. |
 | [`wave_get_transaction`](#wave_get_transaction) | read | One transaction with every line: bank/card side (anchor), category lines with order numbers, amounts, sales tax, vendor/customer, tags, review status, its current sequence, and which fields Wave allows editing. |
 | [`wave_update_transaction`](#wave_update_transaction) | sends (irreversible) | Edit a transaction as in the Wave web app: date, description, notes, reviewed (verified), bank/card account, total amount, category, vendor or customer, or the full set of split lines. |
 | [`wave_delete_transaction`](#wave_delete_transaction) | sends (irreversible) | Delete a transaction, as the web app's Delete does. |
@@ -1102,7 +1103,7 @@ Create up to 50 money transactions in one request (same shape as wave_create_tra
 
 **List transactions** · toolset `transactions` · read
 
-List and search the business's transactions as Wave's Transactions page shows them: bank and card transactions, expenses, deposits, transfers, bill and invoice payments. Live data. Filter by date range, text in the description, bank/card account (accountId), category accounts (categoryIds) or uncategorizedOnly. Cursor pagination: pass nextCursor back as cursor. Each row has the amount, direction, bank/card account, category (or categories when split), vendor, sales tax and review status. IDs work with wave_get_transaction, wave_update_transaction and wave_delete_transaction. Uses Wave's web-app API (unofficial), which needs a web session: if it is missing or expired, the user runs node <package>/bin/wave-mcp.js login in a terminal on <host>.
+List and search the business's transactions as Wave's Transactions page shows them: bank and card transactions, expenses, deposits, transfers, bill and invoice payments. Live data. Filter by date range, text in the description, bank/card account (accountId), category accounts (categoryIds) or uncategorizedOnly. Cursor pagination: pass nextCursor back as cursor. For totals (spend per category, month, vendor or account) use wave_summarize_transactions instead of paging through rows. Each row has the amount, direction, bank/card account, category (or categories when split), vendor, sales tax and review status. IDs work with wave_get_transaction, wave_update_transaction and wave_delete_transaction. Uses Wave's web-app API (unofficial), which needs a web session: if it is missing or expired, the user runs node <package>/bin/wave-mcp.js login in a terminal on <host>.
 
 | Parameter | Type | Required | Default | Notes |
 |---|---|---|---|---|
@@ -1110,8 +1111,8 @@ List and search the business's transactions as Wave's Transactions page shows th
 | `startDate` | string |  |  | Earliest transaction date (inclusive) |
 | `endDate` | string |  |  | Latest transaction date (inclusive) |
 | `search` | string |  |  | Text in the transaction description or a line description (case-insensitive) |
-| `accountId` | string |  |  | Account register: transactions with any line on this account, usually a bank or card account; includes journal entries that touch it (wave_list_accounts) |
-| `categoryIds` | string[] |  |  | Only transactions with a line in one of these category accounts. up to 50 items |
+| `accountId` | string |  |  | Bank or card account (wave_list_accounts): transactions paid from or into it. An income/expense category given here is treated as categoryIds |
+| `categoryIds` | string[] |  |  | Category accounts (income/expense, wave_list_accounts with search): transactions with a line in any of them. up to 50 items |
 | `uncategorizedOnly` | boolean |  | false | Only transactions still in Uncategorized Income/Expense |
 | `source` | "MANUAL" \| "PLAID" \| "YODLEE" \| "CASHEDGE" \| "GENERIC_EXTERNAL_API" \| "RECEIPT" \| "RECEIPT_CAPTURE" \| "SHOPIFY" \| … |  |  | Where it came from: MANUAL = statement upload; PLAID/YODLEE/CASHEDGE = bank connection; GENERIC_EXTERNAL_API = API (wave_create_transaction); RECEIPT/RECEIPT_CAPTURE = receipts. Entries typed into Wave have no source |
 | `transactionIds` | string[] |  |  | up to 100 items |
@@ -1119,6 +1120,25 @@ List and search the business's transactions as Wave's Transactions page shows th
 | `pageSize` | integer |  | 25 | Rows per page (max 100). min 1, max 100 |
 | `cursor` | string |  |  | nextCursor from the previous page |
 | `detail` | "summary" \| "full" |  | "summary" | summary: key fields, long text clipped. full: every field and line items |
+
+### wave_summarize_transactions
+
+**Summarize transactions** · toolset `transactions` · read
+
+Totals over every matching transaction, grouped by category, month, vendor, customer or bank/card account: how much was spent on Marketing this year, spend per month, top vendors. Pages through Wave itself and returns only the totals, so use it instead of paging wave_list_transactions to add things up. Same filters as wave_list_transactions. Sums line amounts (which include sales tax): money-out lines (debits) are withdrawals, money-in lines (credits) are deposits; journal entries count by the same debit/credit rule. With categoryIds, only the lines in those categories count, so split transactions are not double counted. Uses Wave's web-app API (unofficial), which needs a web session: if it is missing or expired, the user runs node <package>/bin/wave-mcp.js login in a terminal on <host>.
+
+| Parameter | Type | Required | Default | Notes |
+|---|---|---|---|---|
+| `businessId` | string |  |  | Business ID; defaults to the one wave_get_context reports |
+| `startDate` | string |  |  | Earliest transaction date (inclusive) |
+| `endDate` | string |  |  | Latest transaction date (inclusive) |
+| `search` | string |  |  | Text in the transaction description or a line description (case-insensitive) |
+| `accountId` | string |  |  | Bank or card account (wave_list_accounts): transactions paid from or into it. An income/expense category given here is treated as categoryIds |
+| `categoryIds` | string[] |  |  | Category accounts (income/expense, wave_list_accounts with search): transactions with a line in any of them. up to 50 items |
+| `uncategorizedOnly` | boolean |  | false | Only transactions still in Uncategorized Income/Expense |
+| `source` | "MANUAL" \| "PLAID" \| "YODLEE" \| "CASHEDGE" \| "GENERIC_EXTERNAL_API" \| "RECEIPT" \| "RECEIPT_CAPTURE" \| "SHOPIFY" \| … |  |  | Where it came from: MANUAL = statement upload; PLAID/YODLEE/CASHEDGE = bank connection; GENERIC_EXTERNAL_API = API (wave_create_transaction); RECEIPT/RECEIPT_CAPTURE = receipts. Entries typed into Wave have no source |
+| `groupBy` | "category" \| "month" \| "vendor" \| "customer" \| "account" \| "none" |  | "category" | account = the bank/card account; none = totals only |
+| `maxGroups` | integer |  | 50 | Largest groups to return; the rest are added up in otherGroups. min 1, max 200 |
 
 ### wave_get_transaction
 
